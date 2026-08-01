@@ -1,8 +1,15 @@
 import { useState } from "react";
+import { Eye } from "lucide-react";
 import {
   Button,
   AutoCompleteSelect,
   Checkbox,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   Input,
   Label,
   Select,
@@ -18,8 +25,10 @@ import {
 } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import {
   accountPlatforms,
+  accountPermissions,
   accountRoles,
   type AccountPlatform,
+  type AccountPermission,
   type AccountRole,
   type AccountStatus,
   createPlatformGrants,
@@ -83,11 +92,13 @@ function PermissionTreeNode({
   node,
   selectedKeys,
   onToggle,
+  onOpenCrud,
   depth = 0,
 }: {
   node: PermissionMenuNode;
   selectedKeys: Set<string>;
   onToggle: (node: PermissionMenuNode, checked: boolean) => void;
+  onOpenCrud: (node: PermissionMenuNode) => void;
   depth?: number;
 }) {
   const state = getMenuSelectionState(node, selectedKeys);
@@ -95,22 +106,29 @@ function PermissionTreeNode({
 
   return (
     <div className={depth === 0 ? "space-y-2" : "space-y-1"}>
-      <label
-        className={`flex items-start gap-3 rounded-lg px-1 py-2 transition-colors hover:bg-slate-50 ${
+      <div
+        className={`flex items-center gap-3 rounded-lg px-1 py-2 transition-colors hover:bg-slate-50 ${
           depth === 0 ? "" : "ml-1"
         }`}
       >
         <Checkbox
           checked={state.indeterminate ? "indeterminate" : state.checked}
           onCheckedChange={(value) => onToggle(node, Boolean(value))}
-          className={"mt-1"}
         />
-        <span className="min-w-0 leading-6">
-          <span className={"block font-medium text-slate-900"}>
-            {node.label}
-          </span>
-        </span>
-      </label>
+        <div className="min-w-0 flex-1 leading-6">
+          <span className="block font-medium text-slate-900">{node.label}</span>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenCrud(node);
+          }}
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+      </div>
 
       {hasChildren ? (
         <div className="grid gap-x-8 gap-y-1 pl-6 sm:grid-cols-2">
@@ -120,6 +138,7 @@ function PermissionTreeNode({
               node={child}
               selectedKeys={selectedKeys}
               onToggle={onToggle}
+              onOpenCrud={onOpenCrud}
               depth={depth + 1}
             />
           ))}
@@ -146,6 +165,13 @@ export function UserAccountForm({
   const [activePlatform, setActivePlatform] = useState<AccountPlatform>(
     form.platformGrants[0]?.platform ?? accountPlatforms[0].value,
   );
+  const [crudDialogOpen, setCrudDialogOpen] = useState(false);
+  const [crudDialogPlatform, setCrudDialogPlatform] = useState<AccountPlatform>(
+    accountPlatforms[0].value,
+  );
+  const [crudDialogNode, setCrudDialogNode] =
+    useState<PermissionMenuNode | null>(null);
+  const [crudSelections, setCrudSelections] = useState<AccountPermission[]>([]);
 
   const updateField = <K extends keyof UserAccountFormValues>(
     key: K,
@@ -191,6 +217,37 @@ export function UserAccountForm({
 
       return { ...grant, permissions: Array.from(nextPermissions) };
     });
+  };
+
+  const openCrudDialog = (
+    platform: AccountPlatform,
+    node: PermissionMenuNode,
+  ) => {
+    const grant =
+      form.platformGrants.find((item) => item.platform === platform) ??
+      form.platformGrants[0];
+
+    setCrudDialogPlatform(platform);
+    setCrudDialogNode(node);
+    setCrudSelections(
+      (grant?.menuCrud?.[node.key] ?? []) as AccountPermission[],
+    );
+    setCrudDialogOpen(true);
+  };
+
+  const saveCrudDialog = () => {
+    if (!crudDialogNode) return;
+
+    updateGrant(crudDialogPlatform, (grant) => ({
+      ...grant,
+      menuCrud: {
+        ...(grant.menuCrud ?? {}),
+        [crudDialogNode.key]: crudSelections,
+      },
+    }));
+
+    setCrudDialogOpen(false);
+    setCrudDialogNode(null);
   };
 
   return (
@@ -376,8 +433,8 @@ export function UserAccountForm({
                     <p className="text-sm font-semibold text-slate-900">
                       {getPlatformLabel(platform.value)}
                     </p>
-                    <p className="text-sm leading-6 text-slate-500">
-                      Chọn vai trò và menu cha/con cho phân hệ này.
+                  <p className="text-sm leading-6 text-slate-500">
+                      Chọn vai trò và nhóm quyền cha/con cho phân hệ này.
                     </p>
                   </div>
 
@@ -406,7 +463,7 @@ export function UserAccountForm({
 
                   {isUserRole ? (
                     <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-500">
-                      Vai trò Người dùng không cần phân quyền chi tiết.
+                      Vai trò Người dùng không cần thiết lập quyền chi tiết.
                     </div>
                   ) : (
                     <div className="max-h-[340px] space-y-3 overflow-y-auto pr-1">
@@ -424,6 +481,9 @@ export function UserAccountForm({
                                 currentNode,
                                 checked,
                               )
+                            }
+                            onOpenCrud={(currentNode) =>
+                              openCrudDialog(platform.value, currentNode)
                             }
                           />
                         </div>
@@ -443,6 +503,83 @@ export function UserAccountForm({
         </Button>
         <Button type="submit">{submitLabel}</Button>
       </div>
+
+      <Dialog
+        open={crudDialogOpen}
+        onOpenChange={(open) => {
+          setCrudDialogOpen(open);
+          if (!open) {
+            setCrudDialogNode(null);
+            setCrudSelections([]);
+          }
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="text-xl font-semibold tracking-[-0.03em] text-slate-900">
+              Thiết lập quyền cho menu
+            </DialogTitle>
+            <DialogDescription className="text-sm leading-6 text-slate-500">
+              {crudDialogNode
+                ? `Chọn các quyền thao tác cho mục "${crudDialogNode.label}".`
+                : "Chọn các quyền thao tác cho menu đang mở."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              Phân hệ:{" "}
+              <span className="font-semibold text-slate-900">
+                {getPlatformLabel(crudDialogPlatform)}
+              </span>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {accountPermissions.map((permission) => {
+                const checked = crudSelections.includes(permission.value);
+
+                return (
+                  <label
+                    key={permission.value}
+                    className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-2"
+                  >
+                    <Checkbox
+                      checked={checked}
+                      onCheckedChange={(value) => {
+                        setCrudSelections((current) =>
+                          value
+                            ? Array.from(
+                                new Set([...current, permission.value]),
+                              )
+                            : current.filter(
+                                (item) => item !== permission.value,
+                              ),
+                        );
+                      }}
+                    />
+                    <span className="text-sm font-medium text-slate-900">
+                      {permission.label}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setCrudDialogOpen(false)}
+            >
+              Hủy
+            </Button>
+            <Button type="button" onClick={saveCrudDialog}>
+              Lưu quyền
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </form>
   );
 }

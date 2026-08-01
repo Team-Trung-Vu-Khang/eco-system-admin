@@ -39,6 +39,7 @@ export type PlatformGrant = {
   platform: AccountPlatform;
   role: AccountRole;
   permissions: string[];
+  menuCrud?: Partial<Record<string, AccountPermission[]>>;
 };
 
 export type PermissionMenuNode = {
@@ -48,57 +49,57 @@ export type PermissionMenuNode = {
 };
 
 const commonPermissionMenus: PermissionMenuNode[] = [
-  { key: "dashboard", label: "Dashboard" },
-  { key: "site-configuration", label: "Site Configuration" },
-  { key: "customer-center", label: "Customer Center" },
+  { key: "dashboard", label: "Bảng điều khiển" },
+  { key: "site-configuration", label: "Cấu hình hệ thống" },
+  { key: "customer-center", label: "Trung tâm khách hàng" },
   {
     key: "user-management",
-    label: "User Management",
+    label: "Quản lý người dùng",
     children: [
-      { key: "user-management-member", label: "Member Management" },
-      { key: "user-management-education-managers", label: "Education Managers" },
-      { key: "user-management-withdrawn-members", label: "Withdrawn Members" },
-      { key: "user-management-instructors", label: "Instructors" },
-      { key: "user-management-general-managers", label: "General Managers" },
+      { key: "user-management-member", label: "Quản lý hội viên" },
+      { key: "user-management-education-managers", label: "Quản lý giáo dục" },
+      { key: "user-management-withdrawn-members", label: "Hội viên đã rút" },
+      { key: "user-management-instructors", label: "Giảng viên" },
+      { key: "user-management-general-managers", label: "Quản lý chung" },
     ],
   },
   {
     key: "member-history",
-    label: "Member History",
+    label: "Lịch sử hội viên",
     children: [
-      { key: "member-history-counseling", label: "Counseling History" },
-      { key: "member-history-certification", label: "Certification History" },
-      { key: "member-history-verification", label: "Verification History" },
+      { key: "member-history-counseling", label: "Lịch sử tư vấn" },
+      { key: "member-history-certification", label: "Lịch sử chứng nhận" },
+      { key: "member-history-verification", label: "Lịch sử xác minh" },
     ],
   },
   {
     key: "delivery-management",
-    label: "Delivery Management",
+    label: "Quản lý giao hàng",
     children: [
-      { key: "delivery-management-details", label: "Delivery Details" },
-      { key: "delivery-management-study-encouragement", label: "Study Encouragement" },
-      { key: "delivery-management-template", label: "Template Management" },
+      { key: "delivery-management-details", label: "Chi tiết giao hàng" },
+      { key: "delivery-management-study-encouragement", label: "Khuyến học" },
+      { key: "delivery-management-template", label: "Quản lý mẫu" },
     ],
   },
   {
     key: "course-management",
-    label: "Course Management",
+    label: "Quản lý khóa học",
     children: [
-      { key: "course-management-dashboard", label: "Course Dashboard" },
-      { key: "course-management-list", label: "Course List" },
-      { key: "course-management-categories", label: "Course Categories" },
-      { key: "course-management-types", label: "Course Types" },
+      { key: "course-management-dashboard", label: "Tổng quan khóa học" },
+      { key: "course-management-list", label: "Danh sách khóa học" },
+      { key: "course-management-categories", label: "Danh mục khóa học" },
+      { key: "course-management-types", label: "Loại khóa học" },
     ],
   },
-  { key: "learning-management", label: "Learning Management" },
+  { key: "learning-management", label: "Quản lý học tập" },
   {
     key: "content-management",
-    label: "Content Management",
+    label: "Quản lý nội dung",
     children: [
-      { key: "content-management-dashboard", label: "Content Dashboard" },
-      { key: "content-management-list", label: "Content List" },
-      { key: "content-management-lecture-parts", label: "Lecture Parts" },
-      { key: "content-management-question-banks", label: "Question Banks" },
+      { key: "content-management-dashboard", label: "Tổng quan nội dung" },
+      { key: "content-management-list", label: "Danh sách nội dung" },
+      { key: "content-management-lecture-parts", label: "Phần bài giảng" },
+      { key: "content-management-question-banks", label: "Ngân hàng câu hỏi" },
     ],
   },
 ];
@@ -217,6 +218,7 @@ export function createDefaultGrant(platform: AccountPlatform): PlatformGrant {
     platform,
     role: "user",
     permissions: getDefaultPermissionsForRole("user"),
+    menuCrud: {},
   };
 }
 
@@ -229,6 +231,7 @@ export function createPlatformGrants(
     role: index === 0 ? role : "user",
     permissions:
       index === 0 ? getDefaultPermissionsForRole(role) : getDefaultPermissionsForRole("user"),
+    menuCrud: {},
   }));
 }
 
