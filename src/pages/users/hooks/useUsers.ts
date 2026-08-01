@@ -144,6 +144,45 @@ export function useUsers() {
     setImportOpen(false)
   }
 
+  const upsertManyUsers = (entries: Array<
+    Pick<UserRow, 'fullName' | 'email' | 'phone' | 'referralName' | 'role' | 'status'>
+  >) => {
+    if (entries.length === 0) return
+
+    setUsers((current) => {
+      const next = [...current]
+
+      for (const entry of entries) {
+        const existingIndex = next.findIndex(
+          (user) => user.email.toLowerCase() === entry.email.toLowerCase(),
+        )
+
+        const payload: UserRow = {
+          id: existingIndex >= 0 ? next[existingIndex].id : `u-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          fullName: entry.fullName,
+          email: entry.email,
+          phone: entry.phone,
+          referralName: entry.referralName,
+          role: entry.role,
+          status: entry.status,
+          lastLoginAt: "Chưa có",
+          description: `Tài khoản được import từ file dữ liệu.`,
+        }
+
+        if (existingIndex >= 0) {
+          next[existingIndex] = {
+            ...next[existingIndex],
+            ...payload,
+          }
+        } else {
+          next.unshift(payload)
+        }
+      }
+
+      return next
+    })
+  }
+
   return {
     users: filteredUsers,
     loading,
@@ -160,6 +199,7 @@ export function useUsers() {
     handleDelete,
     handleConfirmDelete,
     handleImportData,
+    upsertManyUsers,
     setLocation,
     isDeleting,
     filters,

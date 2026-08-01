@@ -11,7 +11,7 @@ import {
   DialogTitle,
   Badge,
 } from "@Team-Trung-Vu-Khang/eco-shared-ui";
-import { ImportUsersDialog } from "../../components/users/ImportUsersDialog";
+import { ImportUsersDialog } from "./components/ImportUsersDialog";
 import { userColumns, type UserRow } from "./data/table";
 import { useUsers } from "./hooks/useUsers";
 
@@ -34,6 +34,7 @@ export default function UsersPage() {
     handleDelete,
     handleConfirmDelete,
     handleImportData,
+    upsertManyUsers,
     setLocation,
     isDeleting,
     filters,
@@ -106,7 +107,11 @@ export default function UsersPage() {
       <ImportUsersDialog
         open={importOpen}
         onOpenChange={setImportOpen}
-        onImport={handleImportData}
+        existingEmails={users.map((user) => user.email)}
+        onImport={(rows) => {
+          upsertManyUsers(rows);
+          handleImportData();
+        }}
       />
 
       <Dialog open={infoOpen} onOpenChange={setInfoOpen}>
