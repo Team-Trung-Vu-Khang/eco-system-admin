@@ -16,6 +16,25 @@ export type ReferralFormValues = {
   status: ReferralStatus
 }
 
+export type ReferralFormErrors = Partial<Record<keyof ReferralFormValues, string>>
+
+export type ReferralUploadReviewRow = {
+  lineNumber: number
+  phone: string
+  fullName: string
+  province: string
+  action: 'Thêm mới' | 'Cập nhật' | 'Lỗi'
+  valid: boolean
+  reasons: string[]
+}
+
+export type ReferralUploadReview = {
+  rows: ReferralUploadReviewRow[]
+  validValues: ReferralFormValues[]
+  successCount: number
+  failCount: number
+}
+
 export const referralStatusOptions = [
   { label: 'Hoạt động', value: 'Hoạt động' },
   { label: 'Khoá', value: 'Khoá' },
@@ -88,15 +107,41 @@ export function formatNow() {
   return `${day}/${month}/${year} ${hours}:${minutes}`
 }
 
-export function parseReferralUploadText(text: string) {
+function isUploadHeader(columns: string[]) {
+  const header = columns.join(' ').toLowerCase()
+  return (
+    header.includes('phone') ||
+    header.includes('sdt') ||
+    header.includes('số điện thoại') ||
+    header.includes('ten') ||
+    header.includes('tên') ||
+    header.includes('tinh') ||
+    header.includes('tỉnh')
+  )
+}
+
+export function reviewReferralUploadText(
+  text: string,
+  existingPhones: string[] = [],
+): ReferralUploadReview {
   const rows = text
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean)
 
-  if (rows.length === 0) return []
+  if (rows.length === 0) {
+    return {
+      rows: [],
+      validValues: [],
+      successCount: 0,
+      failCount: 0,
+    }
+  }
 
-  const mappedRows: ReferralFormValues[] = []
+  const reviewedRows: ReferralUploadReviewRow[] = []
+  const validValues: ReferralFormValues[] = []
+  const existingPhoneSet = new Set(existingPhones)
+  const seenPhonesInFile = new Set<string>()
 
   for (const [index, row] of rows.entries()) {
     const columns = row
@@ -104,28 +149,69 @@ export function parseReferralUploadText(text: string) {
       .map((cell) => cell.trim())
       .filter(Boolean)
 
-    if (index === 0) {
-      const header = columns.join(' ').toLowerCase()
-      if (
-        header.includes('phone') ||
-        header.includes('sdt') ||
-        header.includes('số điện thoại') ||
-        header.includes('ten') ||
-        header.includes('tên')
-      ) {
-        continue
-      }
+    if (index === 0 && isUploadHeader(columns)) {
+      continue
     }
 
-    if (columns.length < 3) continue
+    const reasons: string[] = []
+    const rawPhone = columns[0] ?? ''
+    const fullName = columns[1] ?? ''
+    const province = columns[2] ?? ''
+    const phone = normalizePhoneTo84(rawPhone)
+    const isExisting = phone ? existingPhoneSet.has(phone) : false
 
-    mappedRows.push({
-      phone: normalizePhoneTo84(columns[0]),
-      fullName: columns[1],
-      province: columns[2],
-      status: 'Hoạt động',
+    if (columns.length < 3) {
+      reasons.push('Thiếu đủ 3 cột: số điện thoại, tên, tỉnh')
+    }
+
+    if (!rawPhone.trim()) {
+      reasons.push('Thiếu số điện thoại')
+    } else if (!phone || phone.length < 10) {
+      reasons.push('Số điện thoại không hợp lệ')
+    }
+
+    if (!fullName.trim()) {
+      reasons.push('Thiếu tên')
+    }
+
+    if (!province.trim()) {
+      reasons.push('Thiếu tỉnh')
+    }
+
+    if (phone && seenPhonesInFile.has(phone)) {
+      reasons.push('Số điện thoại bị trùng trong tệp')
+    }
+
+    const valid = reasons.length === 0
+    if (valid) {
+      seenPhonesInFile.add(phone)
+      validValues.push({
+        phone,
+        fullName: fullName.trim(),
+        province: province.trim(),
+        status: 'Hoạt động',
+      })
+    }
+
+    reviewedRows.push({
+      lineNumber: index + 1,
+      phone,
+      fullName: fullName.trim(),
+      province: province.trim(),
+      action: valid ? (isExisting ? 'Cập nhật' : 'Thêm mới') : 'Lỗi',
+      valid,
+      reasons,
     })
   }
 
-  return mappedRows
+  return {
+    rows: reviewedRows,
+    validValues,
+    successCount: validValues.length,
+    failCount: reviewedRows.length - validValues.length,
+  }
+}
+
+export function parseReferralUploadText(text: string) {
+  return reviewReferralUploadText(text).validValues
 }

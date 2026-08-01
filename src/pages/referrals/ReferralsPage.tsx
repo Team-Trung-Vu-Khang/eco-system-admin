@@ -1,62 +1,25 @@
-import { useMemo, useRef, useState } from "react";
-import { Upload, Plus, Users } from "lucide-react";
-import {
-  AutoCompleteSelect,
-  Button,
-  DataTable,
-  DeleteDialog,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  FormDialog,
-  Input,
-  Label,
-  Badge,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea,
-} from "@Team-Trung-Vu-Khang/eco-shared-ui";
+import { useMemo, useState } from "react";
+import { useLocation } from "wouter";
+import { DeleteDialog } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import {
   buildReferralFormValues,
   useReferralsStore,
 } from "./hooks/useReferralsStore";
 import { getUsersLinkedToReferral } from "../users/hooks/useUsers";
-import { type UserRow } from "../users/data/table";
 import {
   initialReferralFormValues,
   normalizePhoneTo84,
-  parseReferralUploadText,
-  referralStatusOptions,
-  type ReferralStatus,
+  reviewReferralUploadText,
+  type ReferralFormErrors,
   type ReferralFormValues,
   type ReferralRow,
+  type ReferralUploadReview,
 } from "./data/referrals";
-import type { Column } from "@Team-Trung-Vu-Khang/eco-shared-ui";
-
-const referralColumns: Column<ReferralRow>[] = [
-  { key: "phone", label: "Số điện thoại" },
-  { key: "fullName", label: "Người giới thiệu", sortable: true },
-  { key: "province", label: "Tỉnh" },
-  {
-    key: "status",
-    label: "Trạng thái",
-    render: (value) => {
-      const status = String(value);
-      const variant = status === "Hoạt động" ? "secondary" : "destructive";
-
-      return <Badge variant={variant}>{status}</Badge>;
-    },
-  },
-  { key: "updatedAt", label: "Cập nhật gần nhất" },
-];
-
-type ReferralFormErrors = Partial<Record<keyof ReferralFormValues, string>>;
+import { ReferralDetailDialog } from "./components/ReferralDetailDialog";
+import { ReferralFormDialog } from "./components/ReferralFormDialog";
+import { ReferralListTable } from "./components/ReferralListTable";
+import { ReferralPageHeader } from "./components/ReferralPageHeader";
+import { ReferralUploadDialog } from "./components/ReferralUploadDialog";
 
 function validate(values: ReferralFormValues) {
   const errors: ReferralFormErrors = {};
@@ -75,7 +38,7 @@ function validate(values: ReferralFormValues) {
 }
 
 export function ReferralsPage() {
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [, setLocation] = useLocation();
   const [formOpen, setFormOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailTab, setDetailTab] = useState<"info" | "users">("info");
@@ -94,6 +57,9 @@ export function ReferralsPage() {
   const [formErrors, setFormErrors] = useState<ReferralFormErrors>({});
   const [uploadText, setUploadText] = useState("");
   const [uploadFileName, setUploadFileName] = useState("");
+  const [uploadResult, setUploadResult] = useState<ReferralUploadReview | null>(
+    null,
+  );
   const [uploadLoading, setUploadLoading] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [pageSize, setPageSize] = useState(10);
@@ -119,6 +85,15 @@ export function ReferralsPage() {
       ...values.map((value) => ({ label: value, value })),
     ];
   }, [referrals]);
+
+  const uploadReview = useMemo(
+    () =>
+      reviewReferralUploadText(
+        uploadText,
+        referrals.map((item) => item.phone),
+      ),
+    [referrals, uploadText],
+  );
 
   const filteredReferrals = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -157,27 +132,6 @@ export function ReferralsPage() {
 
     return getUsersLinkedToReferral(detailReferral.fullName);
   }, [detailReferral]);
-
-  const linkedUserColumns: Column<UserRow>[] = useMemo(
-    () => [
-      { key: "fullName", label: "Họ và tên", sortable: true, width: "180px" },
-      { key: "phone", label: "Số điện thoại", width: "150px" },
-      { key: "email", label: "Email", width: "240px" },
-      { key: "role", label: "Vai trò", width: "140px" },
-      {
-        key: "status",
-        label: "Trạng thái",
-        width: "140px",
-        render: (value) => {
-          const status = String(value);
-          const variant = status === "Hoạt động" ? "secondary" : "destructive";
-
-          return <Badge variant={variant}>{status}</Badge>;
-        },
-      },
-    ],
-    [],
-  );
 
   const openCreate = () => {
     setSelectedReferral(null);
@@ -264,14 +218,10 @@ export function ReferralsPage() {
   const submitUpload = async () => {
     setUploadLoading(true);
     try {
-      const parsedRows = parseReferralUploadText(uploadText);
-      upsertManyReferrals(parsedRows);
-      setUploadOpen(false);
-      setUploadText("");
-      setUploadFileName("");
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+      if (uploadReview.validValues.length > 0) {
+        upsertManyReferrals(uploadReview.validValues);
       }
+      setUploadResult(uploadReview);
     } finally {
       setUploadLoading(false);
     }
@@ -285,71 +235,60 @@ export function ReferralsPage() {
     setDeleteTarget(null);
   };
 
-  const readFile = async (file: File) => {
-    const text = await file.text();
+  const downloadReferralTemplate = () => {
+    const template = [
+      "Số điện thoại,Tên,Tỉnh",
+      "0901234567,Nguyễn Văn A,TP. Hồ Chí Minh",
+      "0902123456,Trần Thị B,Hà Nội",
+    ].join("\n");
+
+    const blob = new Blob([template], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "mau-nguoi-gioi-thieu.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const resetUploadDialog = () => {
+    setUploadText("");
+    setUploadFileName("");
+    setUploadResult(null);
+  };
+
+  const onUploadFileLoaded = (text: string, fileName: string) => {
     setUploadText(text);
-    setUploadFileName(file.name);
+    setUploadFileName(fileName);
+    setUploadResult(null);
   };
 
   return (
     <section className="space-y-6 rounded-3xl border border-black/5 bg-white/80 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur md:p-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-black/5 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
-            <Users className="h-3.5 w-3.5" />
-            Quản trị hệ thống
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-3xl font-semibold tracking-[-0.04em] text-slate-900 md:text-4xl">
-              Quản lý người giới thiệu
-            </h2>
-            <p className="max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
-              Danh sách tài khoản người giới thiệu. Có thể upload, tạo mới hoặc
-              sửa thông tin theo số điện thoại, tên và tỉnh.
-            </p>
-          </div>
-        </div>
+      <ReferralPageHeader
+        onUploadClick={() => setUploadOpen(true)}
+        onCreateClick={openCreate}
+      />
 
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => setUploadOpen(true)}>
-            <Upload className="mr-2 h-4 w-4" />
-            Nhập dữ liệu
-          </Button>
-          <Button onClick={openCreate}>
-            <Plus className="mr-2 h-4 w-4" />
-            Tạo thông tin
-          </Button>
-        </div>
-      </div>
-
-      <DataTable
-        columns={referralColumns}
+      <ReferralListTable
         data={filteredReferrals}
-        searchable
-        searchPlaceholder="Tìm kiếm theo số điện thoại, tên, tỉnh..."
-        selectable={false}
-        loading={false}
         pageSize={pageSize}
         currentIndex={currentIndex}
         totalElements={response.totalElements}
         totalPages={response.totalPages}
+        provinceOptions={provinceOptions}
         onSearch={handleSearch}
         onPageSize={setPageSize}
         onIndexChange={setCurrentIndex}
-        filters={[
-          {
-            key: "province",
-            label: "Tỉnh",
-            options: provinceOptions,
-          },
-        ]}
         onFilterChange={handleFilterChange}
         onView={openView}
         onEdit={openEdit}
         onDelete={openDelete}
       />
 
-      <FormDialog
+      <ReferralFormDialog
         open={formOpen}
         onOpenChange={(open) => {
           setFormOpen(open);
@@ -359,166 +298,34 @@ export function ReferralsPage() {
             setFormValues(initialReferralFormValues);
           }
         }}
-        title={
-          selectedReferral
-            ? "Sửa thông tin người giới thiệu"
-            : "Tạo thông tin người giới thiệu"
-        }
-        description={
-          selectedReferral
-            ? `Bản ghi gốc đang được đối chiếu theo số điện thoại cũ: ${selectedReferral.phone}.`
-            : "Nhập số điện thoại, tên và tỉnh. Số điện thoại sẽ được tự động chuẩn hóa về đầu 84."
-        }
-        onSubmit={submitForm}
-        submitLabel={selectedReferral ? "Lưu thay đổi" : "Tạo thông tin"}
+        selectedReferral={selectedReferral}
+        formValues={formValues}
+        formErrors={formErrors}
         loading={formLoading}
-        size="lg"
-      >
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="referral-phone" required>
-              Số điện thoại
-            </Label>
-            <Input
-              id="referral-phone"
-              value={formValues.phone}
-              onChange={(event) => updateField("phone", event.target.value)}
-              placeholder="0901 234 567"
-              aria-invalid={Boolean(formErrors.phone)}
-            />
+        provinceOptions={provinceOptions}
+        onSubmit={submitForm}
+        onFieldChange={updateField}
+      />
 
-            {formErrors.phone ? (
-              <p className="text-sm text-rose-600">{formErrors.phone}</p>
-            ) : null}
-          </div>
+      <ReferralUploadDialog
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        uploadText={uploadText}
+        uploadFileName={uploadFileName}
+        uploadReview={uploadReview}
+        uploadResult={uploadResult}
+        uploadLoading={uploadLoading}
+        onUploadTextChange={(value) => {
+          setUploadText(value);
+          setUploadResult(null);
+        }}
+        onFileLoaded={onUploadFileLoaded}
+        onDownloadTemplate={downloadReferralTemplate}
+        onSubmit={submitUpload}
+        onReset={resetUploadDialog}
+      />
 
-          <div className="space-y-2">
-            <Label htmlFor="referral-name" required>
-              Tên
-            </Label>
-            <Input
-              id="referral-name"
-              value={formValues.fullName}
-              onChange={(event) => updateField("fullName", event.target.value)}
-              placeholder="Nhập người giới thiệu"
-              aria-invalid={Boolean(formErrors.fullName)}
-            />
-            {formErrors.fullName ? (
-              <p className="text-sm text-rose-600">{formErrors.fullName}</p>
-            ) : null}
-          </div>
-
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="referral-province" required>
-              Tỉnh
-            </Label>
-            <AutoCompleteSelect
-              value={formValues.province}
-              onChange={(value) => updateField("province", value)}
-              options={provinceOptions}
-              placeholder="Chọn tỉnh"
-              searchPlaceholder="Tìm theo tỉnh..."
-              emptyText="Không tìm thấy tỉnh"
-              clearable
-              autocomplete
-            />
-            {formErrors.province ? (
-              <p className="text-sm text-rose-600">{formErrors.province}</p>
-            ) : null}
-          </div>
-
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="referral-status" required>
-              Trạng thái
-            </Label>
-            <Select
-              value={formValues.status}
-              onValueChange={(value) => updateField("status", value as ReferralStatus)}
-            >
-              <SelectTrigger
-                id="referral-status"
-                aria-invalid={Boolean(formErrors.status)}
-              >
-                <SelectValue placeholder="Chọn trạng thái" />
-              </SelectTrigger>
-              <SelectContent>
-                {referralStatusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {formErrors.status ? (
-              <p className="text-sm text-rose-600">{formErrors.status}</p>
-            ) : null}
-          </div>
-        </div>
-      </FormDialog>
-
-      <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Upload người giới thiệu</DialogTitle>
-            <DialogDescription>
-              Tải lên file `.csv` hoặc dán dữ liệu theo format: số điện thoại,
-              tên, tỉnh. Số điện thoại sẽ được chuẩn hóa về đầu <code>84</code>{" "}
-              và update theo số cũ nếu trùng.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="referral-upload-file">File upload</Label>
-              <Input
-                id="referral-upload-file"
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.txt"
-                onChange={async (event) => {
-                  const file = event.target.files?.[0];
-                  if (file) {
-                    await readFile(file);
-                  }
-                }}
-              />
-              <p className="text-xs text-slate-500">
-                Ví dụ: `0901234567,Nguyễn Văn A,Hà Nội`
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="referral-upload-text">Dữ liệu upload</Label>
-              <Textarea
-                id="referral-upload-text"
-                value={uploadText}
-                onChange={(event) => setUploadText(event.target.value)}
-                placeholder="Mỗi dòng: số điện thoại, tên, tỉnh"
-                className="min-h-40"
-              />
-              {uploadFileName ? (
-                <p className="text-xs text-slate-500">
-                  File đã chọn: {uploadFileName}
-                </p>
-              ) : null}
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setUploadOpen(false)}>
-              Hủy
-            </Button>
-            <Button
-              onClick={submitUpload}
-              disabled={uploadLoading || !uploadText.trim()}
-            >
-              Upload
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
+      <ReferralDetailDialog
         open={detailOpen}
         onOpenChange={(open) => {
           setDetailOpen(open);
@@ -527,126 +334,12 @@ export function ReferralsPage() {
             setDetailTab("info");
           }
         }}
-      >
-        <DialogContent className="w-[calc(40vw-1rem)] max-w-[calc(40vw-1rem)] overflow-hidden border-0 bg-white p-0 shadow-none">
-          {detailReferral ? (
-            <div className="bg-white px-6 py-6">
-              <DialogHeader className="space-y-4">
-                <div className="space-y-2">
-                  <DialogTitle className="text-2xl font-semibold tracking-[-0.04em] text-slate-900">
-                    {detailReferral.fullName}
-                  </DialogTitle>
-                  <DialogDescription className="text-sm leading-6 text-slate-500">
-                    Thông tin người giới thiệu được chuẩn hóa theo số điện thoại
-                    đầu
-                    <code>84</code>.
-                  </DialogDescription>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge
-                    variant={
-                      detailReferral.status === "Hoạt động"
-                        ? "secondary"
-                        : "destructive"
-                    }
-                  >
-                    {detailReferral.status}
-                  </Badge>
-                  <span className="text-sm text-slate-500">
-                    Cập nhật gần nhất: {detailReferral.updatedAt}
-                  </span>
-                </div>
-              </DialogHeader>
-
-              <div className="mt-5 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setDetailTab("info")}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                    detailTab === "info"
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-100 text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  Thông tin
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDetailTab("users")}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                    detailTab === "users"
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-100 text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  Danh sách người dùng
-                </button>
-              </div>
-
-              {detailTab === "info" ? (
-                <div className="mt-6 space-y-5">
-                  <div className="grid gap-2 sm:grid-cols-[180px_1fr] sm:gap-4">
-                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      Số điện thoại
-                    </div>
-                    <div className="text-sm font-medium text-slate-900">
-                      {detailReferral.phone}
-                    </div>
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-[180px_1fr] sm:gap-4">
-                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      Tên
-                    </div>
-                    <div className="text-sm font-medium text-slate-900">
-                      {detailReferral.fullName}
-                    </div>
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-[180px_1fr] sm:gap-4">
-                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      Tỉnh
-                    </div>
-                    <div className="text-sm font-medium text-slate-900">
-                      {detailReferral.province}
-                    </div>
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-[180px_1fr] sm:gap-4">
-                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      Trạng thái
-                    </div>
-                    <div className="text-sm font-medium text-slate-900">
-                      {detailReferral.status}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="mt-6">
-                  {linkedUsers.length > 0 ? (
-                    <div className="w-full min-w-0 overflow-x-auto pb-2">
-                      <DataTable
-                        columns={linkedUserColumns}
-                        data={linkedUsers}
-                        selectable={false}
-                        loading={false}
-                        pageSize={Math.max(1, linkedUsers.length)}
-                        currentIndex={0}
-                        totalElements={linkedUsers.length}
-                        totalPages={1}
-                        onPageSize={() => undefined}
-                        onIndexChange={() => undefined}
-                      />
-                    </div>
-                  ) : (
-                    <div className="rounded-2xl bg-slate-50 px-4 py-6 text-sm text-slate-500">
-                      Chưa có người dùng nào được gắn với người giới thiệu này.
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ) : null}
-        </DialogContent>
-      </Dialog>
+        detailReferral={detailReferral}
+        detailTab={detailTab}
+        onTabChange={setDetailTab}
+        linkedUsers={linkedUsers}
+        onOpenUser={(userId) => setLocation(`/users/${userId}/edit`)}
+      />
 
       <DeleteDialog
         open={deleteOpen}

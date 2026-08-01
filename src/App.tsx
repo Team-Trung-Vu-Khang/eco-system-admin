@@ -5,7 +5,6 @@ import { AdminsPage } from "./pages/admins/AdminsPage";
 import { AdminsCreatePage } from "./pages/admins/create/AdminsCreatePage";
 import { AdminsEditPage } from "./pages/admins/edit/AdminsEditPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
-import { PermissionsPage } from "./pages/permissions/PermissionsPage";
 import { ReferralsPage } from "./pages/referrals/ReferralsPage";
 import { UsersCreatePage } from "./pages/users/create/UsersCreatePage";
 import { UsersEditPage } from "./pages/users/edit/UsersEditPage";
@@ -37,7 +36,6 @@ function App() {
         <Route path="/admins/create" component={AdminsCreatePage} />
         <Route path="/admins/:id/edit" component={AdminsEditPage} />
         <Route path="/referrals" component={ReferralsPage} />
-        <Route path="/permissions" component={PermissionsPage} />
         <Route component={NotFoundPage} />
       </Switch>
     </AdminLayout>
