@@ -90,7 +90,7 @@ export function ReferralUploadDialog({
     >
       <DialogContent className="w-[min(96vw,72rem)] max-w-[96vw] sm:max-w-none max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
-          <DialogTitle>Tải lên người giới thiệu</DialogTitle>
+          <DialogTitle>Tải lên danh sách người giới thiệu</DialogTitle>
           <DialogDescription>
             Tải lên file dữ liệu theo mẫu. Số điện thoại sẽ được chuẩn hóa về
             đầu <code>84</code> và hệ thống sẽ kiểm tra trước khi lưu.

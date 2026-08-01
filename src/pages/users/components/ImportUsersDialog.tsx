@@ -68,7 +68,7 @@ export function ImportUsersDialog({
       <DialogContent className="w-[min(96vw,72rem)] max-w-[96vw] sm:max-w-none max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-2xl">
         <DialogHeader className="space-y-2">
           <DialogTitle className="text-2xl font-semibold tracking-[-0.04em] text-slate-900">
-            Nhập người dùng
+            Tải lên danh sách người dùng
           </DialogTitle>
           <DialogDescription className="text-sm leading-6 text-slate-500">
             Đây là khung nhập dữ liệu mẫu. Bạn có thể dùng file theo đúng định
@@ -85,13 +85,12 @@ export function ImportUsersDialog({
                 </p>
                 <ul className="list-disc space-y-1 pl-5 text-sm leading-6 text-slate-600">
                   <li>
-                    File gồm 6 cột: họ và tên, email, số điện thoại, người
-                    giới thiệu, vai trò, trạng thái.
+                    File gồm 6 cột: họ và tên, email, số điện thoại, người giới
+                    thiệu, vai trò, trạng thái.
                   </li>
                   <li>Số điện thoại sẽ tự động quy về đầu 84.</li>
                   <li>
-                    Hệ thống sẽ kiểm tra trước khi nhập và báo rõ từng dòng
-                    lỗi.
+                    Hệ thống sẽ kiểm tra trước khi nhập và báo rõ từng dòng lỗi.
                   </li>
                 </ul>
               </div>
@@ -220,7 +219,7 @@ export function ImportUsersDialog({
             }}
             disabled={uploading || review.successCount === 0}
           >
-            Nhập
+            Tải lên
           </Button>
         </DialogFooter>
       </DialogContent>
