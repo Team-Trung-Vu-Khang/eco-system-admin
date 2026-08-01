@@ -364,6 +364,7 @@ export function UserAccountForm({
                 ) ?? form.platformGrants[0];
               const selectedKeys = new Set(grant?.permissions ?? []);
               const menuNodes = getPlatformPermissionMenus(platform.value);
+              const isUserRole = grant?.role === "user";
 
               return (
                 <TabsContent
@@ -403,26 +404,32 @@ export function UserAccountForm({
                     </Select>
                   </div>
 
-                  <div className="max-h-[340px] space-y-3 overflow-y-auto pr-1">
-                    {menuNodes.map((node) => (
-                      <div
-                        key={node.key}
-                        className="border-t border-slate-100 pt-3 first:border-t-0 first:pt-0"
-                      >
-                        <PermissionTreeNode
-                          node={node}
-                          selectedKeys={selectedKeys}
-                          onToggle={(currentNode, checked) =>
-                            handleNodeToggle(
-                              platform.value,
-                              currentNode,
-                              checked,
-                            )
-                          }
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  {isUserRole ? (
+                    <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-500">
+                      Vai trò Người dùng không cần phân quyền chi tiết.
+                    </div>
+                  ) : (
+                    <div className="max-h-[340px] space-y-3 overflow-y-auto pr-1">
+                      {menuNodes.map((node) => (
+                        <div
+                          key={node.key}
+                          className="border-t border-slate-100 pt-3 first:border-t-0 first:pt-0"
+                        >
+                          <PermissionTreeNode
+                            node={node}
+                            selectedKeys={selectedKeys}
+                            onToggle={(currentNode, checked) =>
+                              handleNodeToggle(
+                                platform.value,
+                                currentNode,
+                                checked,
+                              )
+                            }
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </TabsContent>
               );
             })}

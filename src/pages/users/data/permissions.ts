@@ -208,7 +208,7 @@ export function getDefaultPermissionsForRole(role: AccountRole) {
       return leafKeys.slice(0, Math.min(2, leafKeys.length));
     case "user":
     default:
-      return leafKeys.slice(0, Math.min(4, leafKeys.length));
+      return [];
   }
 }
 
