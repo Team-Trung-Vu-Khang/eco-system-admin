@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { Upload, Plus, Users } from "lucide-react";
 import {
+  AutoCompleteSelect,
   Button,
   DataTable,
   DeleteDialog,
@@ -14,6 +15,11 @@ import {
   Input,
   Label,
   Badge,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Textarea,
 } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import {
@@ -406,12 +412,15 @@ export function ReferralsPage() {
             <Label htmlFor="referral-province" required>
               Tỉnh
             </Label>
-            <Input
-              id="referral-province"
+            <AutoCompleteSelect
               value={formValues.province}
-              onChange={(event) => updateField("province", event.target.value)}
-              placeholder="Ví dụ: Hà Nội"
-              aria-invalid={Boolean(formErrors.province)}
+              onChange={(value) => updateField("province", value)}
+              options={provinceOptions}
+              placeholder="Chọn tỉnh"
+              searchPlaceholder="Tìm theo tỉnh..."
+              emptyText="Không tìm thấy tỉnh"
+              clearable
+              autocomplete
             />
             {formErrors.province ? (
               <p className="text-sm text-rose-600">{formErrors.province}</p>
@@ -422,20 +431,24 @@ export function ReferralsPage() {
             <Label htmlFor="referral-status" required>
               Trạng thái
             </Label>
-            <select
-              id="referral-status"
+            <Select
               value={formValues.status}
-              onChange={(event) =>
-                updateField("status", event.target.value as ReferralStatus)
-              }
-              className="h-11 w-full rounded-xl border border-black/10 bg-white px-3 text-sm outline-none transition focus:border-slate-400"
+              onValueChange={(value) => updateField("status", value as ReferralStatus)}
             >
-              {referralStatusOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger
+                id="referral-status"
+                aria-invalid={Boolean(formErrors.status)}
+              >
+                <SelectValue placeholder="Chọn trạng thái" />
+              </SelectTrigger>
+              <SelectContent>
+                {referralStatusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {formErrors.status ? (
               <p className="text-sm text-rose-600">{formErrors.status}</p>
             ) : null}
