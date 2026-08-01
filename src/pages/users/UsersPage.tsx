@@ -167,6 +167,14 @@ export default function UsersPage() {
                     </div>
                     <div className="grid gap-1 px-5 py-4 sm:grid-cols-[180px_1fr] sm:gap-4">
                       <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                        Người giới thiệu
+                      </dt>
+                      <dd className="text-sm font-medium text-slate-900">
+                        {selectedUser.referralName || 'Không có'}
+                      </dd>
+                    </div>
+                    <div className="grid gap-1 px-5 py-4 sm:grid-cols-[180px_1fr] sm:gap-4">
+                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                         Vai trò
                       </dt>
                       <dd className="text-sm font-medium text-slate-900">

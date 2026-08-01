@@ -1,4 +1,5 @@
 import { ShieldCheck, UserCog, Users } from '../components/icons'
+import { Users2 } from 'lucide-react'
 
 export const menuEcoSystemAdminGroups = [
   {
@@ -21,6 +22,12 @@ export const menuEcoSystemAdminGroups = [
         label: 'Phân quyền',
         icon: ShieldCheck,
         href: '/permissions',
+      },
+      {
+        id: 'system-referrals',
+        label: 'Người giới thiệu',
+        icon: Users2,
+        href: '/referrals',
       },
     ],
   },

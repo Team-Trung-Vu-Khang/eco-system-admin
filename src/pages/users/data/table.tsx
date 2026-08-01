@@ -5,6 +5,7 @@ export type UserRow = {
   fullName: string
   email: string
   phone: string
+  referralName: string
   role: string
   status: string
   lastLoginAt: string
@@ -15,6 +16,7 @@ export const userColumns: Column<UserRow>[] = [
   { key: 'fullName', label: 'Họ và tên', sortable: true },
   { key: 'email', label: 'Email' },
   { key: 'phone', label: 'Số điện thoại' },
+  { key: 'referralName', label: 'Người giới thiệu' },
   { key: 'role', label: 'Vai trò' },
   { key: 'lastLoginAt', label: 'Đăng nhập gần nhất' },
   {

@@ -1,9 +1,10 @@
-import { useLocation } from 'wouter'
-import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Controller, useForm } from 'react-hook-form'
+import { useLocation } from "wouter";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
 import {
   Button,
+  AutoCompleteSelect,
   Label,
   Input,
   Select,
@@ -12,32 +13,35 @@ import {
   SelectTrigger,
   SelectValue,
   Textarea,
-} from '@Team-Trung-Vu-Khang/eco-shared-ui'
-import { ArrowLeft, UserPlus } from 'lucide-react'
+} from "@Team-Trung-Vu-Khang/eco-shared-ui";
+import { ArrowLeft, UserPlus } from "lucide-react";
+import { referralNameOptions } from "../data/referrals";
 
 const userCreateSchema = z.object({
-  fullName: z.string().min(1, 'Vui lòng nhập họ và tên'),
-  email: z.string().min(1, 'Vui lòng nhập email').email('Email không hợp lệ'),
+  fullName: z.string().min(1, "Vui lòng nhập họ và tên"),
+  email: z.string().min(1, "Vui lòng nhập email").email("Email không hợp lệ"),
   phone: z
     .string()
-    .min(1, 'Vui lòng nhập số điện thoại')
-    .regex(/^[0-9+\s()-]+$/, 'Số điện thoại không hợp lệ'),
-  role: z.string().min(1, 'Vui lòng chọn vai trò'),
+    .min(1, "Vui lòng nhập số điện thoại")
+    .regex(/^[0-9+\s()-]+$/, "Số điện thoại không hợp lệ"),
+  referralName: z.string().optional(),
+  role: z.string().min(1, "Vui lòng chọn vai trò"),
   note: z.string().optional(),
-})
+});
 
-type UserCreateFormValues = z.infer<typeof userCreateSchema>
+type UserCreateFormValues = z.infer<typeof userCreateSchema>;
 
 const initialValues: UserCreateFormValues = {
-  fullName: '',
-  email: '',
-  phone: '',
-  role: 'Người dùng',
-  note: '',
-}
+  fullName: "",
+  email: "",
+  phone: "",
+  referralName: "",
+  role: "Người dùng",
+  note: "",
+};
 
 export function UsersCreatePage() {
-  const [, setLocation] = useLocation()
+  const [, setLocation] = useLocation();
   const {
     control,
     handleSubmit,
@@ -45,11 +49,11 @@ export function UsersCreatePage() {
   } = useForm<UserCreateFormValues>({
     resolver: zodResolver(userCreateSchema),
     defaultValues: initialValues,
-  })
+  });
 
   const onSubmit = async () => {
-    setLocation('/users')
-  }
+    setLocation("/users");
+  };
 
   return (
     <section className="space-y-6 rounded-3xl border border-black/5 bg-white/80 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur md:p-8">
@@ -64,14 +68,14 @@ export function UsersCreatePage() {
               Thêm người dùng
             </h2>
             <p className="max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
-              Tạo mới một người dùng trong hệ thống. Form này đang dùng `zod`
-              để validate dữ liệu nhập vào.
+              Tạo mới một người dùng trong hệ thống. Form này đang dùng `zod` để
+              validate dữ liệu nhập vào.
             </p>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => setLocation('/users')}>
+          <Button variant="outline" onClick={() => setLocation("/users")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại
           </Button>
@@ -145,6 +149,26 @@ export function UsersCreatePage() {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="referralName">Người giới thiệu</Label>
+            <Controller
+              control={control}
+              name="referralName"
+              render={({ field }) => (
+                <AutoCompleteSelect
+                  options={referralNameOptions}
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  placeholder="Chọn người giới thiệu"
+                  searchPlaceholder="Tìm theo người giới thiệu..."
+                  emptyText="Không tìm thấy người giới thiệu"
+                  clearable
+                  autocomplete
+                />
+              )}
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="role" required>
               Vai trò
             </Label>
@@ -186,7 +210,11 @@ export function UsersCreatePage() {
         </div>
 
         <div className="flex flex-wrap justify-end gap-2 border-t border-black/5 pt-4">
-          <Button variant="outline" type="button" onClick={() => setLocation('/users')}>
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => setLocation("/users")}
+          >
             Hủy
           </Button>
           <Button type="submit" disabled={isSubmitting}>
@@ -195,5 +223,5 @@ export function UsersCreatePage() {
         </div>
       </form>
     </section>
-  )
+  );
 }
