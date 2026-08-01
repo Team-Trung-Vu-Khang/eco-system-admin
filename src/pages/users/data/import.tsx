@@ -1,4 +1,8 @@
 import { Badge, type Column } from "@Team-Trung-Vu-Khang/eco-shared-ui";
+import {
+  normalizeRoleValue,
+  normalizeStatusValue,
+} from "./permissions";
 import type { UserRow } from "./table";
 
 export type UserImportValues = Pick<
@@ -163,8 +167,8 @@ export function reviewUserUploadText(
         email: email.trim(),
         phone,
         referralName: referralName.trim(),
-        role: role.trim(),
-        status: status.trim(),
+        role: normalizeRoleValue(role.trim()),
+        status: normalizeStatusValue(status.trim()),
       });
     }
 

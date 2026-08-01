@@ -1,57 +1,31 @@
-import { useState } from "react";
-import {
-  Button,
-  AutoCompleteSelect,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea,
-} from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { useLocation } from "wouter";
-import { referralNameOptions } from "../data/referrals";
-
-type FormState = {
-  fullName: string;
-  email: string;
-  phone: string;
-  referralName: string;
-  role: string;
-  status: string;
-  note: string;
-};
-
-const initialForm: FormState = {
-  fullName: "Nguyễn Văn A",
-  email: "a@example.com",
-  phone: "0901 234 567",
-  referralName: "Trần Thị B",
-  role: "Quản trị viên",
-  status: "Hoạt động",
-  note: "Người dùng mẫu để chỉnh sửa.",
-};
+import { Button } from "@Team-Trung-Vu-Khang/eco-shared-ui";
+import { accountPlatforms, createPlatformGrants } from "../data/permissions";
+import {
+  UserAccountForm,
+  type UserAccountFormValues,
+} from "../components/UserAccountForm";
 
 export function UsersEditPage() {
   const [, setLocation] = useLocation();
-  const [form, setForm] = useState<FormState>(initialForm);
-
-  const updateField = <K extends keyof FormState>(
-    key: K,
-    value: FormState[K],
-  ) => {
-    setForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setLocation("/users");
+  const initialValues: UserAccountFormValues = {
+    fullName: "Nguyễn Văn A",
+    email: "a@example.com",
+    phone: "0901 234 567",
+    birthYear: "1992",
+    address: "Q.1, TP.HCM",
+    referralName: "Trần Thị B",
+    status: "active",
+    note: "Người dùng mẫu để chỉnh sửa.",
+    platformGrants: createPlatformGrants(
+      accountPlatforms.map((platform) => platform.value),
+      "admin",
+    ),
   };
 
   return (
-    <section className="space-y-6 rounded-3xl border border-black/5 bg-white/80 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur md:p-8">
+    <section className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 md:p-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-black/5 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
@@ -60,11 +34,11 @@ export function UsersEditPage() {
           </div>
           <div className="space-y-2">
             <h2 className="text-3xl font-semibold tracking-[-0.04em] text-slate-900 md:text-4xl">
-              Chỉnh sửa người dùng
+              Chỉnh sửa tài khoản
             </h2>
             <p className="max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
-              Cập nhật thông tin người dùng. Không chỉnh sửa trường đăng nhập
-              gần nhất ở đây.
+              Cập nhật thông tin người dùng và điều chỉnh quyền theo từng phân
+              hệ.
             </p>
           </div>
         </div>
@@ -77,140 +51,14 @@ export function UsersEditPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid gap-6">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <label
-              htmlFor="fullName"
-              className="text-sm font-medium text-slate-700"
-            >
-              Họ và tên
-            </label>
-            <Input
-              id="fullName"
-              value={form.fullName}
-              onChange={(e) => updateField("fullName", e.target.value)}
-              placeholder="Nhập họ và tên"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="email"
-              className="text-sm font-medium text-slate-700"
-            >
-              Email
-            </label>
-            <Input
-              id="email"
-              type="email"
-              value={form.email}
-              onChange={(e) => updateField("email", e.target.value)}
-              placeholder="user@example.com"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="phone"
-              className="text-sm font-medium text-slate-700"
-            >
-              Số điện thoại
-            </label>
-            <Input
-              id="phone"
-              value={form.phone}
-              onChange={(e) => updateField("phone", e.target.value)}
-              placeholder="0901 234 567"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="referralName"
-              className="text-sm font-medium text-slate-700"
-            >
-              Người giới thiệu
-            </label>
-            <AutoCompleteSelect
-              options={referralNameOptions}
-              value={form.referralName}
-              onChange={(value) => updateField("referralName", value)}
-              placeholder="Chọn người giới thiệu"
-              searchPlaceholder="Tìm theo người giới thiệu..."
-              emptyText="Không tìm thấy người giới thiệu"
-              clearable
-              autocomplete
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="role"
-              className="text-sm font-medium text-slate-700"
-            >
-              Vai trò
-            </label>
-            <Select
-              value={form.role}
-              onValueChange={(value) => updateField("role", value)}
-            >
-              <SelectTrigger id="role">
-                <SelectValue placeholder="Chọn vai trò" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Người dùng">Người dùng</SelectItem>
-                <SelectItem value="Quản trị viên">Quản trị viên</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="status"
-              className="text-sm font-medium text-slate-700"
-            >
-              Trạng thái
-            </label>
-            <Select
-              value={form.status}
-              onValueChange={(value) => updateField("status", value)}
-            >
-              <SelectTrigger id="status">
-                <SelectValue placeholder="Chọn trạng thái" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Hoạt động">Hoạt động</SelectItem>
-                <SelectItem value="Khóa">Khóa</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="note" className="text-sm font-medium text-slate-700">
-            Ghi chú
-          </label>
-          <Textarea
-            id="note"
-            value={form.note}
-            onChange={(e) => updateField("note", e.target.value)}
-            placeholder="Nhập ghi chú cho người dùng..."
-            className="min-h-32"
-          />
-        </div>
-
-        <div className="flex flex-wrap justify-end gap-2 border-t border-black/5 pt-4">
-          <Button
-            variant="outline"
-            type="button"
-            onClick={() => setLocation("/users")}
-          >
-            Hủy
-          </Button>
-          <Button type="submit">Lưu thay đổi</Button>
-        </div>
-      </form>
+      <UserAccountForm
+        title="Thông tin tài khoản"
+        description="Cập nhật thông tin định danh và điều chỉnh vai trò của từng phân hệ đang được gán cho tài khoản."
+        submitLabel="Lưu thay đổi"
+        initialValues={initialValues}
+        onSubmit={() => setLocation("/users")}
+        onCancel={() => setLocation("/users")}
+      />
     </section>
   );
 }
