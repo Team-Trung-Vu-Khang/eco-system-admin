@@ -1,52 +1,18 @@
 import { useMemo, useState } from 'react'
-import type { AdminRow } from '../data/table'
-
-const seedAdmins: AdminRow[] = [
-  {
-    id: 'a-1',
-    fullName: 'Nguyễn Văn Huy',
-    email: 'huy.nguyen@ecosystem.vn',
-    role: 'Super Admin',
-    status: 'Hoạt động',
-    lastLoginAt: '31/07/2026 09:12',
-    scope: 'Toàn hệ thống',
-  },
-  {
-    id: 'a-2',
-    fullName: 'Trần Minh Thảo',
-    email: 'thao.tran@ecosystem.vn',
-    role: 'System Admin',
-    status: 'Hoạt động',
-    lastLoginAt: '31/07/2026 15:38',
-    scope: 'Người dùng, phân quyền',
-  },
-  {
-    id: 'a-3',
-    fullName: 'Lê Quốc Bảo',
-    email: 'bao.le@ecosystem.vn',
-    role: 'Operations Admin',
-    status: 'Tạm khóa',
-    lastLoginAt: '29/07/2026 18:20',
-    scope: 'Vận hành, báo cáo',
-  },
-  {
-    id: 'a-4',
-    fullName: 'Phạm Thị Linh',
-    email: 'linh.pham@ecosystem.vn',
-    role: 'Audit Admin',
-    status: 'Hoạt động',
-    lastLoginAt: '30/07/2026 11:05',
-    scope: 'Kiểm tra nhật ký',
-  },
-]
+import { useLocation } from 'wouter'
+import { type AdminRow, adminRoleOptions, adminStatusOptions } from '../data/admins'
+import { useAdminsStore } from './useAdminsStore'
 
 export function useAdmins() {
-  const [admins] = useState<AdminRow[]>(seedAdmins)
+  const [, setLocation] = useLocation()
+  const { admins, deleteAdmin } = useAdminsStore()
   const [loading] = useState(false)
   const [pageSize, setPageSize] = useState(10)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({})
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [selectedAdmin, setSelectedAdmin] = useState<AdminRow | null>(null)
 
   const filters = [
     {
@@ -54,10 +20,7 @@ export function useAdmins() {
       label: 'Vai trò',
       options: [
         { label: 'Tất cả', value: '' },
-        { label: 'Super Admin', value: 'Super Admin' },
-        { label: 'System Admin', value: 'System Admin' },
-        { label: 'Operations Admin', value: 'Operations Admin' },
-        { label: 'Audit Admin', value: 'Audit Admin' },
+        ...adminRoleOptions,
       ],
     },
     {
@@ -65,8 +28,7 @@ export function useAdmins() {
       label: 'Trạng thái',
       options: [
         { label: 'Tất cả', value: '' },
-        { label: 'Hoạt động', value: 'Hoạt động' },
-        { label: 'Tạm khóa', value: 'Tạm khóa' },
+        ...adminStatusOptions,
       ],
     },
   ]
@@ -77,7 +39,16 @@ export function useAdmins() {
     return admins.filter((admin) => {
       const matchesSearch =
         !query ||
-        [admin.fullName, admin.email, admin.role, admin.status, admin.scope, admin.lastLoginAt]
+        [
+          admin.fullName,
+          admin.email,
+          admin.phone,
+          admin.role,
+          admin.status,
+          admin.permissions.join(' '),
+          admin.lastLoginAt,
+          admin.description,
+        ]
           .join(' ')
           .toLowerCase()
           .includes(query)
@@ -108,6 +79,19 @@ export function useAdmins() {
     setCurrentIndex(0)
   }
 
+  const handleDelete = (admin: AdminRow) => {
+    setSelectedAdmin(admin)
+    setDeleteOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!selectedAdmin) return
+
+    deleteAdmin(selectedAdmin.id)
+    setDeleteOpen(false)
+    setSelectedAdmin(null)
+  }
+
   return {
     admins: filteredAdmins,
     loading,
@@ -119,5 +103,10 @@ export function useAdmins() {
     handleSearch,
     filters,
     handleFilterChange,
+    deleteOpen,
+    setDeleteOpen,
+    handleDelete,
+    handleConfirmDelete,
+    setLocation,
   }
 }

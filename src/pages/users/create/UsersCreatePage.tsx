@@ -47,7 +47,7 @@ export function UsersCreatePage() {
     defaultValues: initialValues,
   })
 
-  const onSubmit = async (_values: UserCreateFormValues) => {
+  const onSubmit = async () => {
     setLocation('/users')
   }
 

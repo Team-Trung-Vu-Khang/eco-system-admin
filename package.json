@@ -10,9 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@Team-Trung-Vu-Khang/eco-shared-ui": "^0.0.6-beta.46",
     "@hookform/resolvers": "^5.5.7",
     "@tailwindcss/vite": "^4.3.3",
-    "@Team-Trung-Vu-Khang/eco-shared-ui": "^0.0.6-beta.45",
     "lucide-react": "^1.28.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
