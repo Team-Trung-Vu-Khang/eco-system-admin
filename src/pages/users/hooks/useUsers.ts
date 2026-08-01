@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useLocation } from 'wouter'
 import type { UserRow } from '../data/table'
 
-const seedUsers: UserRow[] = [
+export const seedUsers: UserRow[] = [
   {
     id: 'u-1',
     fullName: 'Nguyễn Văn A',
@@ -37,6 +37,10 @@ const seedUsers: UserRow[] = [
     description: 'Tài khoản đang tạm khóa do chưa xác nhận lại thông tin.',
   },
 ]
+
+export function getUsersLinkedToReferral(referralName: string) {
+  return seedUsers.filter((user) => user.referralName === referralName)
+}
 
 export function useUsers() {
   const [, setLocation] = useLocation()
