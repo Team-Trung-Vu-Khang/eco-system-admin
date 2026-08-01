@@ -110,78 +110,72 @@ export default function UsersPage() {
       />
 
       <Dialog open={infoOpen} onOpenChange={setInfoOpen}>
-        <DialogContent className="overflow-hidden p-0 sm:max-w-2xl">
+        <DialogContent className="overflow-hidden border-0 bg-white p-0 shadow-none sm:max-w-2xl">
           {selectedUser ? (
-            <div className="bg-gradient-to-br from-emerald-50 via-white to-sky-50">
-              <div className="border-b border-slate-200/70 px-6 pb-5 pt-6">
-                <DialogHeader className="space-y-4">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
-                      <UserRound className="h-6 w-6" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <DialogTitle className="text-2xl font-semibold tracking-[-0.04em] text-slate-900">
-                        {selectedUser.fullName}
-                      </DialogTitle>
-                      <DialogDescription className="mt-1 text-sm leading-6 text-slate-500">
-                        {selectedUser.description}
-                      </DialogDescription>
-                    </div>
+            <div className="bg-white px-6 py-6">
+              <DialogHeader className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+                    <UserRound className="h-6 w-6" />
                   </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge
-                      variant={
-                        selectedUser.status === "Hoạt động"
-                          ? "secondary"
-                          : "destructive"
-                      }
-                    >
-                      {selectedUser.status}
-                    </Badge>
-                    <span className="text-sm text-slate-500">
-                      Đăng nhập gần nhất: {selectedUser.lastLoginAt}
-                    </span>
+                  <div className="min-w-0 flex-1">
+                    <DialogTitle className="text-2xl font-semibold tracking-[-0.04em] text-slate-900">
+                      {selectedUser.fullName}
+                    </DialogTitle>
+                    <DialogDescription className="mt-1 text-sm leading-6 text-slate-500">
+                      {selectedUser.description}
+                    </DialogDescription>
                   </div>
-                </DialogHeader>
-              </div>
+                </div>
 
-              <div className="px-6 py-5">
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/85 shadow-sm">
-                  <dl className="divide-y divide-slate-100">
-                    <div className="grid gap-1 px-5 py-4 sm:grid-cols-[180px_1fr] sm:gap-4">
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        Email
-                      </dt>
-                      <dd className="text-sm font-medium text-slate-900">
-                        {selectedUser.email}
-                      </dd>
-                    </div>
-                    <div className="grid gap-1 px-5 py-4 sm:grid-cols-[180px_1fr] sm:gap-4">
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        Số điện thoại
-                      </dt>
-                      <dd className="text-sm font-medium text-slate-900">
-                        {selectedUser.phone}
-                      </dd>
-                    </div>
-                    <div className="grid gap-1 px-5 py-4 sm:grid-cols-[180px_1fr] sm:gap-4">
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        Người giới thiệu
-                      </dt>
-                      <dd className="text-sm font-medium text-slate-900">
-                        {selectedUser.referralName || 'Không có'}
-                      </dd>
-                    </div>
-                    <div className="grid gap-1 px-5 py-4 sm:grid-cols-[180px_1fr] sm:gap-4">
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        Vai trò
-                      </dt>
-                      <dd className="text-sm font-medium text-slate-900">
-                        {selectedUser.role}
-                      </dd>
-                    </div>
-                  </dl>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge
+                    variant={
+                      selectedUser.status === "Hoạt động"
+                        ? "secondary"
+                        : "destructive"
+                    }
+                  >
+                    {selectedUser.status}
+                  </Badge>
+                  <span className="text-sm text-slate-500">
+                    Đăng nhập gần nhất: {selectedUser.lastLoginAt}
+                  </span>
+                </div>
+              </DialogHeader>
+
+              <div className="mt-6 space-y-5">
+                <div className="grid gap-2 sm:grid-cols-[180px_1fr] sm:gap-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Email
+                  </div>
+                  <div className="text-sm font-medium text-slate-900">
+                    {selectedUser.email}
+                  </div>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-[180px_1fr] sm:gap-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Số điện thoại
+                  </div>
+                  <div className="text-sm font-medium text-slate-900">
+                    {selectedUser.phone}
+                  </div>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-[180px_1fr] sm:gap-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Người giới thiệu
+                  </div>
+                  <div className="text-sm font-medium text-slate-900">
+                    {selectedUser.referralName || 'Không có'}
+                  </div>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-[180px_1fr] sm:gap-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Vai trò
+                  </div>
+                  <div className="text-sm font-medium text-slate-900">
+                    {selectedUser.role}
+                  </div>
                 </div>
               </div>
             </div>
