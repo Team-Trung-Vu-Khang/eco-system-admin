@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { Building2 } from "lucide-react";
 import { Route, Switch, useLocation } from "wouter";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { ReferralCreatePage } from "./pages/referrals/ReferralCreatePage";
+import { ReferralDetailPage } from "./pages/referrals/ReferralDetailPage";
 import { ReferralsPage } from "./pages/referrals/ReferralsPage";
 import { UsersCreatePage } from "./pages/users/create/UsersCreatePage";
 import { UsersEditPage } from "./pages/users/edit/UsersEditPage";
@@ -29,6 +31,8 @@ function App() {
         <Route path="/users" component={UsersPage} />
         <Route path="/users/create" component={UsersCreatePage} />
         <Route path="/users/:id/edit" component={UsersEditPage} />
+        <Route path="/referrals/create" component={ReferralCreatePage} />
+        <Route path="/referrals/:id" component={ReferralDetailPage} />
         <Route path="/referrals" component={ReferralsPage} />
         <Route component={NotFoundPage} />
       </Switch>

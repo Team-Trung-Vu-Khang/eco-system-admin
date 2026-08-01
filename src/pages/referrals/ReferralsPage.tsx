@@ -1,67 +1,27 @@
 import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { DeleteDialog } from "@Team-Trung-Vu-Khang/eco-shared-ui";
+import { useReferralsStore } from "./hooks/useReferralsStore";
 import {
-  buildReferralFormValues,
-  useReferralsStore,
-} from "./hooks/useReferralsStore";
-import { getUsersLinkedToReferral } from "../users/hooks/useUsers";
-import {
-  initialReferralFormValues,
-  normalizePhoneTo84,
-  reviewReferralUploadText,
-  type ReferralFormErrors,
-  type ReferralFormValues,
   type ReferralRow,
   type ReferralUploadReview,
+  reviewReferralUploadText,
 } from "./data/referrals";
-import { ReferralDetailDialog } from "./components/ReferralDetailDialog";
-import { ReferralFormDialog } from "./components/ReferralFormDialog";
 import { ReferralListTable } from "./components/ReferralListTable";
 import { ReferralPageHeader } from "./components/ReferralPageHeader";
 import { ReferralUploadDialog } from "./components/ReferralUploadDialog";
 
-function validate(values: ReferralFormValues) {
-  const errors: ReferralFormErrors = {};
-  const normalizedPhone = normalizePhoneTo84(values.phone);
-
-  if (!values.phone.trim()) errors.phone = "Vui lòng nhập số điện thoại";
-  else if (!normalizedPhone.startsWith("84")) {
-    errors.phone = "Số điện thoại phải quy về đầu 84";
-  }
-
-  if (!values.fullName.trim()) errors.fullName = "Vui lòng nhập tên";
-  if (!values.province.trim()) errors.province = "Vui lòng nhập tỉnh";
-  if (!values.status.trim()) errors.status = "Vui lòng chọn trạng thái";
-
-  return errors;
-}
-
 export function ReferralsPage() {
   const [, setLocation] = useLocation();
-  const [formOpen, setFormOpen] = useState(false);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [detailTab, setDetailTab] = useState<"info" | "users">("info");
   const [uploadOpen, setUploadOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [selectedReferral, setSelectedReferral] = useState<ReferralRow | null>(
-    null,
-  );
-  const [detailReferral, setDetailReferral] = useState<ReferralRow | null>(
-    null,
-  );
   const [deleteTarget, setDeleteTarget] = useState<ReferralRow | null>(null);
-  const [formValues, setFormValues] = useState<ReferralFormValues>(
-    initialReferralFormValues,
-  );
-  const [formErrors, setFormErrors] = useState<ReferralFormErrors>({});
   const [uploadText, setUploadText] = useState("");
   const [uploadFileName, setUploadFileName] = useState("");
   const [uploadResult, setUploadResult] = useState<ReferralUploadReview | null>(
     null,
   );
   const [uploadLoading, setUploadLoading] = useState(false);
-  const [formLoading, setFormLoading] = useState(false);
   const [pageSize, setPageSize] = useState(10);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
@@ -70,8 +30,6 @@ export function ReferralsPage() {
   );
   const {
     referrals,
-    createReferral,
-    updateReferral,
     deleteReferral,
     upsertManyReferrals,
   } = useReferralsStore();
@@ -127,30 +85,12 @@ export function ReferralsPage() {
     [filteredReferrals.length, pageSize],
   );
 
-  const linkedUsers = useMemo(() => {
-    if (!detailReferral) return [];
-
-    return getUsersLinkedToReferral(detailReferral.fullName);
-  }, [detailReferral]);
-
   const openCreate = () => {
-    setSelectedReferral(null);
-    setFormValues(initialReferralFormValues);
-    setFormErrors({});
-    setFormOpen(true);
-  };
-
-  const openEdit = (referral: ReferralRow) => {
-    setSelectedReferral(referral);
-    setFormValues(buildReferralFormValues(referral));
-    setFormErrors({});
-    setFormOpen(true);
+    setLocation("/referrals/create");
   };
 
   const openView = (referral: ReferralRow) => {
-    setDetailReferral(referral);
-    setDetailTab("info");
-    setDetailOpen(true);
+    setLocation(`/referrals/${referral.id}`);
   };
 
   const openDelete = (referral: ReferralRow) => {
@@ -166,53 +106,6 @@ export function ReferralsPage() {
   const handleFilterChange = (key: string, value: string) => {
     setActiveFilters((current) => ({ ...current, [key]: value }));
     setCurrentIndex(0);
-  };
-
-  const updateField = <K extends keyof ReferralFormValues>(
-    key: K,
-    value: ReferralFormValues[K],
-  ) => {
-    setFormValues((current) => ({ ...current, [key]: value }));
-  };
-
-  const submitForm = async () => {
-    const nextErrors = validate(formValues);
-    setFormErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
-
-    const normalizedPhone = normalizePhoneTo84(formValues.phone);
-    const duplicate = referrals.find(
-      (item) =>
-        item.phone === normalizedPhone && item.id !== selectedReferral?.id,
-    );
-    if (duplicate) {
-      setFormErrors({
-        phone:
-          "Số điện thoại này đã tồn tại. Hãy chỉnh sửa bản ghi cũ thay vì tạo mới.",
-      });
-      return;
-    }
-
-    setFormLoading(true);
-    try {
-      if (selectedReferral) {
-        updateReferral(selectedReferral.id, {
-          ...formValues,
-          phone: normalizedPhone,
-        });
-      } else {
-        createReferral({
-          ...formValues,
-          phone: normalizedPhone,
-        });
-      }
-
-      setFormOpen(false);
-      setSelectedReferral(null);
-      setFormValues(initialReferralFormValues);
-    } finally {
-      setFormLoading(false);
-    }
   };
 
   const submitUpload = async () => {
@@ -284,27 +177,7 @@ export function ReferralsPage() {
         onIndexChange={setCurrentIndex}
         onFilterChange={handleFilterChange}
         onView={openView}
-        onEdit={openEdit}
         onDelete={openDelete}
-      />
-
-      <ReferralFormDialog
-        open={formOpen}
-        onOpenChange={(open) => {
-          setFormOpen(open);
-          if (!open) {
-            setSelectedReferral(null);
-            setFormErrors({});
-            setFormValues(initialReferralFormValues);
-          }
-        }}
-        selectedReferral={selectedReferral}
-        formValues={formValues}
-        formErrors={formErrors}
-        loading={formLoading}
-        provinceOptions={provinceOptions}
-        onSubmit={submitForm}
-        onFieldChange={updateField}
       />
 
       <ReferralUploadDialog
@@ -318,22 +191,6 @@ export function ReferralsPage() {
         onDownloadTemplate={downloadReferralTemplate}
         onSubmit={submitUpload}
         onReset={resetUploadDialog}
-      />
-
-      <ReferralDetailDialog
-        open={detailOpen}
-        onOpenChange={(open) => {
-          setDetailOpen(open);
-          if (!open) {
-            setDetailReferral(null);
-            setDetailTab("info");
-          }
-        }}
-        detailReferral={detailReferral}
-        detailTab={detailTab}
-        onTabChange={setDetailTab}
-        linkedUsers={linkedUsers}
-        onOpenUser={(userId) => setLocation(`/users/${userId}/edit`)}
       />
 
       <DeleteDialog

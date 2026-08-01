@@ -62,6 +62,10 @@ export function useReferralsStore() {
     return referrals.find((referral) => referral.phone === normalizedPhone) ?? null
   }
 
+  const getReferralById = (id: string) => {
+    return referrals.find((referral) => referral.id === id) ?? null
+  }
+
   const createReferral = (values: ReferralFormValues) => {
     const normalizedPhone = normalizePhoneTo84(values.phone)
     const nextReferral: ReferralRow = {
@@ -132,6 +136,7 @@ export function useReferralsStore() {
   return {
     referrals,
     getReferralByPhone,
+    getReferralById,
     createReferral,
     updateReferral,
     deleteReferral,

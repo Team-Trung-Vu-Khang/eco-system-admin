@@ -4,7 +4,7 @@ import { Button } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 type ReferralPageHeaderProps = {
   onUploadClick: () => void;
   onCreateClick: () => void;
-}
+};
 
 export function ReferralPageHeader({
   onUploadClick,
@@ -22,8 +22,8 @@ export function ReferralPageHeader({
             Quản lý người giới thiệu
           </h2>
           <p className="max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
-            Danh sách tài khoản người giới thiệu. Có thể upload, tạo mới hoặc
-            sửa thông tin theo số điện thoại, tên và tỉnh.
+            Danh sách người giới thiệu. Có thể nhập dữ liệu, tạo mới hoặc mở
+            chi tiết để chỉnh sửa trên trang riêng.
           </p>
         </div>
       </div>
@@ -39,5 +39,5 @@ export function ReferralPageHeader({
         </Button>
       </div>
     </div>
-  )
+  );
 }

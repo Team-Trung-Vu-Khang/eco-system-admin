@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Badge, DataTable, type Column } from "@Team-Trung-Vu-Khang/eco-shared-ui";
+import { DataTable, type Column } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import type { ReferralRow } from "../data/referrals";
 
 type ReferralListTableProps = {
@@ -14,9 +14,8 @@ type ReferralListTableProps = {
   onIndexChange: (value: number) => void;
   onFilterChange: (key: string, value: string) => void;
   onView: (row: ReferralRow) => void;
-  onEdit: (row: ReferralRow) => void;
   onDelete: (row: ReferralRow) => void;
-}
+};
 
 export function ReferralListTable({
   data,
@@ -30,24 +29,13 @@ export function ReferralListTable({
   onIndexChange,
   onFilterChange,
   onView,
-  onEdit,
   onDelete,
 }: ReferralListTableProps) {
   const columns: Column<ReferralRow>[] = useMemo(
     () => [
-      { key: "phone", label: "Số điện thoại" },
       { key: "fullName", label: "Người giới thiệu", sortable: true },
+      { key: "phone", label: "Số điện thoại" },
       { key: "province", label: "Tỉnh" },
-      {
-        key: "status",
-        label: "Trạng thái",
-        render: (value) => {
-          const status = String(value);
-          const variant = status === "Hoạt động" ? "secondary" : "destructive";
-
-          return <Badge variant={variant}>{status}</Badge>;
-        },
-      },
       { key: "updatedAt", label: "Cập nhật gần nhất" },
     ],
     [],
@@ -77,8 +65,7 @@ export function ReferralListTable({
       ]}
       onFilterChange={onFilterChange}
       onView={onView}
-      onEdit={onEdit}
       onDelete={onDelete}
     />
-  )
+  );
 }
