@@ -19,6 +19,7 @@ export type ReferralFormValues = {
 export type ReferralFormErrors = Partial<Record<keyof ReferralFormValues, string>>
 
 export type ReferralUploadReviewRow = {
+  id: string
   lineNumber: number
   phone: string
   fullName: string
@@ -194,6 +195,7 @@ export function reviewReferralUploadText(
     }
 
     reviewedRows.push({
+      id: `${index + 1}-${phone || 'invalid'}`,
       lineNumber: index + 1,
       phone,
       fullName: fullName.trim(),

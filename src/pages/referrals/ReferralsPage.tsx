@@ -310,15 +310,10 @@ export function ReferralsPage() {
       <ReferralUploadDialog
         open={uploadOpen}
         onOpenChange={setUploadOpen}
-        uploadText={uploadText}
         uploadFileName={uploadFileName}
         uploadReview={uploadReview}
         uploadResult={uploadResult}
         uploadLoading={uploadLoading}
-        onUploadTextChange={(value) => {
-          setUploadText(value);
-          setUploadResult(null);
-        }}
         onFileLoaded={onUploadFileLoaded}
         onDownloadTemplate={downloadReferralTemplate}
         onSubmit={submitUpload}
