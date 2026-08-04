@@ -7,8 +7,10 @@ export function attachApiRequestMiddleware(client: AxiosInstance) {
 
     const headers = AxiosHeaders.from(config.headers);
 
-    if (token && !headers.has("Authorization")) {
+    if (token) {
       headers.set("Authorization", `Bearer ${token}`);
+    } else {
+      headers.delete("Authorization");
     }
 
     config.headers = headers;

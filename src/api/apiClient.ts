@@ -1,4 +1,4 @@
-import axios, { AxiosHeaders, type AxiosRequestConfig } from "axios";
+import axios, { type AxiosRequestConfig, type AxiosResponse } from "axios";
 import { API_BASE_URL } from "@/constants/api.constant";
 import { attachApiRequestMiddleware } from "./middlewares/request.middleware";
 import { attachApiResponseMiddleware } from "./middlewares/response.middleware";
@@ -27,12 +27,6 @@ const client = axios.create({
 attachApiRequestMiddleware(client);
 attachApiResponseMiddleware(client);
 
-function toAxiosHeaders(
-  headers: AxiosRequestConfig["headers"] | undefined,
-): AxiosHeaders {
-  return AxiosHeaders.from(headers as any);
-}
-
 async function request<TResponse>(
   path: string,
   init: (ApiClientRequestOptions & { method?: AxiosRequestConfig["method"] }) =
@@ -43,7 +37,7 @@ async function request<TResponse>(
     method: init.method ?? "GET",
     params: init.params,
     data: init.body,
-    headers: toAxiosHeaders(init.headers),
+    headers: init.headers,
     signal: init.signal,
     timeout: init.timeout,
     withCredentials: init.withCredentials,
@@ -54,6 +48,17 @@ async function request<TResponse>(
     onUploadProgress: init.onUploadProgress,
     validateStatus: init.validateStatus,
   });
+
+  if (response.status < 200 || response.status >= 300) {
+    const error = new Error(
+      `Request failed with status ${response.status}`,
+    ) as Error & {
+      response: AxiosResponse<TResponse>;
+    };
+
+    error.response = response;
+    throw error;
+  }
 
   return response.data;
 }
