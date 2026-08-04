@@ -14,7 +14,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  toast,
+  useToast,
 } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import { useCreateReferrerMutation } from "@/api/referrers/referrers.hooks";
 import { useProvincesQuery } from "@/api/provinces/provinces.hooks";
@@ -46,6 +46,7 @@ const defaultValues: ReferralCreateFormValues = {
 
 export function ReferralCreatePage() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const provincesQuery = useProvincesQuery({
     status: "active",
     page: 0,
@@ -73,27 +74,33 @@ export function ReferralCreatePage() {
   }, [provincesQuery.data?.content]);
 
   const onSubmit = async (values: ReferralCreateFormValues) => {
-    try {
-      const normalizedPhone = normalizePhoneTo84(values.phone);
+    const normalizedPhone = normalizePhoneTo84(values.phone);
 
-      await createReferrerMutation.mutateAsync({
+    createReferrerMutation.mutate(
+      {
         phoneNumber: normalizedPhone,
-        fullName: values.fullName.trim(),
-        province: values.province.trim(),
-      });
+        fullName: values.fullName,
+        province: values.province,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Tạo người giới thiệu thành công",
+          });
+          setLocation("/referrals");
+        },
+        onError: (error) => {
+          console.error(error);
 
-      toast({
-        title: "Tạo người giới thiệu thành công",
-      });
-      setLocation("/referrals");
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: "Không thể tạo người giới thiệu",
-        description: "Vui lòng thử lại.",
-        variant: "destructive",
-      });
-    }
+          toast({
+            title: "Không thể tạo người giới thiệu",
+            description: "Vui lòng thử lại.",
+            variant: "destructive",
+            duration: 300,
+          });
+        },
+      },
+    );
   };
 
   return (
