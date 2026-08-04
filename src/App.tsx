@@ -1,14 +1,14 @@
 import { useEffect } from "react";
 import { Building2 } from "lucide-react";
 import { Route, Switch, useLocation } from "wouter";
-import { NotFoundPage } from "./pages/NotFoundPage";
-import { ReferralCreatePage } from "./pages/referrals/ReferralCreatePage";
-import { ReferralDetailPage } from "./pages/referrals/ReferralDetailPage";
-import { ReferralsPage } from "./pages/referrals/ReferralsPage";
-import { UsersCreatePage } from "./pages/users/create/UsersCreatePage";
-import { UsersEditPage } from "./pages/users/edit/UsersEditPage";
-import UsersPage from "./pages/users/UsersPage";
-import "./App.css";
+import { NotFoundPage } from "@/pages/NotFoundPage";
+import { ReferralCreatePage } from "@/pages/referrals/ReferralCreatePage";
+import { ReferralDetailPage } from "@/pages/referrals/ReferralDetailPage";
+import { ReferralsPage } from "@/pages/referrals/ReferralsPage";
+import { UsersCreatePage } from "@/pages/users/create/UsersCreatePage";
+import { UsersEditPage } from "@/pages/users/edit/UsersEditPage";
+import UsersPage from "@/pages/users/UsersPage";
+import "@/App.css";
 import { AdminLayout } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 
 function App() {
