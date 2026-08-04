@@ -14,6 +14,9 @@ export const PATH = {
     BULK_UPLOAD_JOB: (jobExecutionId: number | string) =>
       `/api/admin/referrers/bulk-upload/${jobExecutionId}`,
   },
+  PROVINCES: {
+    LIST: "/api/admin/master-data/geo/provinces",
+  },
   APP: {
     HOME: "/users",
   },

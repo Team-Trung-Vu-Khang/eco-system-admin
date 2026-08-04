@@ -10,4 +10,7 @@ export const QUERY_KEY = {
     BULK_UPLOAD: ["referrers", "bulk-upload"] as const,
     BULK_UPLOAD_JOB: ["referrers", "bulk-upload-job"] as const,
   },
+  PROVINCES: {
+    LIST: ["provinces", "list"] as const,
+  },
 } as const;
