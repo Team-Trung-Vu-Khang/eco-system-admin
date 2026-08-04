@@ -52,7 +52,6 @@ export function ReferralListTable({
       onSearch={onSearch}
       onPageSize={onPageSize}
       onIndexChange={onIndexChange}
-      onView={onView}
     />
   );
 }
