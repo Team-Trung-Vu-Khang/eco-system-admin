@@ -87,9 +87,9 @@ export function ReferralCreatePage() {
   };
 
   return (
-    <section className="space-y-6 rounded-3xl border border-black/5 bg-white/80 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur md:p-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-3">
+    <section className="w-full space-y-6 rounded-3xl border border-black/5 bg-white/80 p-5 text-left shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur md:p-8">
+      <div className="flex w-full flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 flex-1 space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-black/5 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
             <Users className="h-3.5 w-3.5" />
             Quản trị hệ thống
@@ -105,7 +105,7 @@ export function ReferralCreatePage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex shrink-0 flex-wrap gap-2">
           <Button variant="outline" onClick={() => setLocation("/referrals")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại

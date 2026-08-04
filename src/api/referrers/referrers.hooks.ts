@@ -76,6 +76,7 @@ export function useBulkUploadReferrerJobQuery(
       return getBulkUploadReferrerJob(query);
     },
     enabled: Boolean(query),
-    refetchInterval: 3000,
+    refetchInterval: (state) =>
+      state.state.data?.status === "STARTED" ? 3000 : false,
   });
 }

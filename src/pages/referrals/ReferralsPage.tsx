@@ -1,10 +1,16 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { DeleteDialog } from "@Team-Trung-Vu-Khang/eco-shared-ui";
-import { useReferralsStore } from "./hooks/useReferralsStore";
+import { useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEY } from "@/constants/query-key.constant";
+import {
+  useBulkUploadReferrerJobQuery,
+  useBulkUploadReferrersMutation,
+  useReferrersQuery,
+} from "@/api/referrers/referrers.hooks";
 import {
   type ReferralRow,
   type ReferralUploadReview,
+  mapReferrerToReferralRow,
   reviewReferralUploadText,
 } from "./data/referrals";
 import { ReferralListTable } from "./components/ReferralListTable";
@@ -13,30 +19,33 @@ import { ReferralUploadDialog } from "./components/ReferralUploadDialog";
 
 export function ReferralsPage() {
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<ReferralRow | null>(null);
   const [uploadText, setUploadText] = useState("");
   const [uploadFileName, setUploadFileName] = useState("");
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadResult, setUploadResult] = useState<ReferralUploadReview | null>(
     null,
   );
-  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploadJobId, setUploadJobId] = useState<number | null>(null);
   const [pageSize, setPageSize] = useState(10);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeFilters, setActiveFilters] = useState<Record<string, string>>(
-    {},
+  const appliedUploadJobIdRef = useRef<number | null>(null);
+  const referrersQuery = useReferrersQuery({
+    keyword: searchTerm.trim() || undefined,
+    page: currentIndex,
+    size: pageSize,
+  });
+  const bulkUploadMutation = useBulkUploadReferrersMutation();
+  const uploadJobQuery = useBulkUploadReferrerJobQuery(
+    uploadJobId ? { jobExecutionId: uploadJobId } : null,
   );
-  const { referrals, deleteReferral, upsertManyReferrals } =
-    useReferralsStore();
-
-  const provinceOptions = useMemo(() => {
-    const values = Array.from(
-      new Set(referrals.map((item) => item.province)),
-    ).sort();
-    return [...values.map((value) => ({ label: value, value }))];
-  }, [referrals]);
+  const referrals = useMemo(
+    () =>
+      referrersQuery.data?.content.map(mapReferrerToReferralRow) ?? [],
+    [referrersQuery.data?.content],
+  );
 
   const uploadReview = useMemo(
     () =>
@@ -47,37 +56,10 @@ export function ReferralsPage() {
     [referrals, uploadText],
   );
 
-  const filteredReferrals = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
-
-    return referrals.filter((referral) => {
-      const matchesSearch =
-        !query ||
-        [
-          referral.phone,
-          referral.fullName,
-          referral.province,
-          referral.status,
-          referral.updatedAt,
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(query);
-
-      const matchesProvince =
-        !activeFilters.province || referral.province === activeFilters.province;
-
-      return matchesSearch && matchesProvince;
-    });
-  }, [activeFilters.province, referrals, searchTerm]);
-
-  const response = useMemo(
-    () => ({
-      totalElements: filteredReferrals.length,
-      totalPages: Math.max(1, Math.ceil(filteredReferrals.length / pageSize)),
-    }),
-    [filteredReferrals.length, pageSize],
-  );
+  const uploadJob = uploadJobQuery.data ?? null;
+  const uploadLoading =
+    bulkUploadMutation.isPending || uploadJob?.status === "STARTED";
+  const listLoading = referrersQuery.isPending || referrersQuery.isFetching;
 
   const openCreate = () => {
     setLocation("/referrals/create");
@@ -87,39 +69,26 @@ export function ReferralsPage() {
     setLocation(`/referrals/${referral.id}`);
   };
 
-  const openDelete = (referral: ReferralRow) => {
-    setDeleteTarget(referral);
-    setDeleteOpen(true);
-  };
-
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     setCurrentIndex(0);
   };
 
-  const handleFilterChange = (key: string, value: string) => {
-    setActiveFilters((current) => ({ ...current, [key]: value }));
-    setCurrentIndex(0);
-  };
-
   const submitUpload = async () => {
-    setUploadLoading(true);
-    try {
-      if (uploadReview.validValues.length > 0) {
-        upsertManyReferrals(uploadReview.validValues);
-      }
-      setUploadResult(uploadReview);
-    } finally {
-      setUploadLoading(false);
+    if (!uploadFile) {
+      return;
     }
-  };
 
-  const confirmDelete = async () => {
-    if (!deleteTarget) return;
-
-    deleteReferral(deleteTarget.id);
-    setDeleteOpen(false);
-    setDeleteTarget(null);
+    try {
+      const result = await bulkUploadMutation.mutateAsync({
+        file: uploadFile,
+      });
+      appliedUploadJobIdRef.current = null;
+      setUploadJobId(result.jobExecutionId);
+      setUploadResult(uploadReview);
+    } catch {
+      // Let the dialog stay open so the user can try again.
+    }
   };
 
   const downloadReferralTemplate = () => {
@@ -143,14 +112,35 @@ export function ReferralsPage() {
   const resetUploadDialog = () => {
     setUploadText("");
     setUploadFileName("");
+    setUploadFile(null);
     setUploadResult(null);
+    setUploadJobId(null);
+    appliedUploadJobIdRef.current = null;
   };
 
-  const onUploadFileLoaded = (text: string, fileName: string) => {
+  const onUploadFileLoaded = (text: string, fileName: string, file: File) => {
     setUploadText(text);
     setUploadFileName(fileName);
+    setUploadFile(file);
     setUploadResult(null);
+    setUploadJobId(null);
+    appliedUploadJobIdRef.current = null;
   };
+
+  useEffect(() => {
+    if (!uploadJob || uploadJob.status === "STARTED") {
+      return;
+    }
+
+    if (appliedUploadJobIdRef.current === uploadJob.jobExecutionId) {
+      return;
+    }
+
+    appliedUploadJobIdRef.current = uploadJob.jobExecutionId;
+    queryClient.invalidateQueries({
+      queryKey: QUERY_KEY.REFERRERS.LIST,
+    });
+  }, [queryClient, uploadJob]);
 
   return (
     <section className="w-full space-y-6 rounded-3xl border border-black/5 bg-white/80 p-5 text-left shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur md:p-8">
@@ -160,18 +150,16 @@ export function ReferralsPage() {
       />
 
       <ReferralListTable
-        data={filteredReferrals}
+        data={referrals}
         pageSize={pageSize}
         currentIndex={currentIndex}
-        totalElements={response.totalElements}
-        totalPages={response.totalPages}
-        provinceOptions={provinceOptions}
+        totalElements={referrersQuery.data?.totalElements ?? 0}
+        totalPages={referrersQuery.data?.totalPages ?? 1}
         onSearch={handleSearch}
         onPageSize={setPageSize}
         onIndexChange={setCurrentIndex}
-        onFilterChange={handleFilterChange}
         onView={openView}
-        onDelete={openDelete}
+        loading={listLoading}
       />
 
       <ReferralUploadDialog
@@ -180,22 +168,12 @@ export function ReferralsPage() {
         uploadFileName={uploadFileName}
         uploadReview={uploadReview}
         uploadResult={uploadResult}
+        uploadJob={uploadJob}
         uploadLoading={uploadLoading}
         onFileLoaded={onUploadFileLoaded}
         onDownloadTemplate={downloadReferralTemplate}
         onSubmit={submitUpload}
         onReset={resetUploadDialog}
-      />
-
-      <DeleteDialog
-        open={deleteOpen}
-        onOpenChange={(open) => {
-          setDeleteOpen(open);
-          if (!open) setDeleteTarget(null);
-        }}
-        title="Xóa người giới thiệu"
-        description="Bạn có chắc chắn muốn xóa người giới thiệu này? Hành động này không thể hoàn tác."
-        onConfirm={confirmDelete}
       />
     </section>
   );

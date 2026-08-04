@@ -1,3 +1,5 @@
+import type { ReferrerListItem } from "@/api/referrers/referrers.response"
+
 export type ReferralStatus = 'Hoạt động' | 'Khoá'
 
 export type ReferralRow = {
@@ -216,4 +218,35 @@ export function reviewReferralUploadText(
 
 export function parseReferralUploadText(text: string) {
   return reviewReferralUploadText(text).validValues
+}
+
+function pad2(value: number) {
+  return String(value).padStart(2, "0")
+}
+
+export function formatDateTime(value: string) {
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return `${pad2(date.getDate())}/${pad2(date.getMonth() + 1)}/${date.getFullYear()} ${pad2(date.getHours())}:${pad2(date.getMinutes())}`
+}
+
+export function normalizeReferralStatus(value: string): ReferralStatus {
+  return value.toLowerCase().includes("hoạt động") || value.toLowerCase().includes("active")
+    ? "Hoạt động"
+    : "Khoá"
+}
+
+export function mapReferrerToReferralRow(item: ReferrerListItem): ReferralRow {
+  return {
+    id: String(item.id),
+    phone: item.username,
+    fullName: item.fullName,
+    province: item.operatingArea,
+    status: normalizeReferralStatus(item.status),
+    updatedAt: formatDateTime(item.createdAt),
+  }
 }

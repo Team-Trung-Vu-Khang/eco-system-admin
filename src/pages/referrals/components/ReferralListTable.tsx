@@ -8,13 +8,11 @@ type ReferralListTableProps = {
   currentIndex: number;
   totalElements: number;
   totalPages: number;
-  provinceOptions: { label: string; value: string }[];
+  loading: boolean;
   onSearch: (value: string) => void;
   onPageSize: (value: number) => void;
   onIndexChange: (value: number) => void;
-  onFilterChange: (key: string, value: string) => void;
   onView: (row: ReferralRow) => void;
-  onDelete: (row: ReferralRow) => void;
 };
 
 export function ReferralListTable({
@@ -23,13 +21,11 @@ export function ReferralListTable({
   currentIndex,
   totalElements,
   totalPages,
-  provinceOptions,
+  loading,
   onSearch,
   onPageSize,
   onIndexChange,
-  onFilterChange,
   onView,
-  onDelete,
 }: ReferralListTableProps) {
   const columns: Column<ReferralRow>[] = useMemo(
     () => [
@@ -48,7 +44,7 @@ export function ReferralListTable({
       searchable
       searchPlaceholder="Tìm kiếm theo số điện thoại, tên, tỉnh..."
       selectable={false}
-      loading={false}
+      loading={loading}
       pageSize={pageSize}
       currentIndex={currentIndex}
       totalElements={totalElements}
@@ -56,16 +52,7 @@ export function ReferralListTable({
       onSearch={onSearch}
       onPageSize={onPageSize}
       onIndexChange={onIndexChange}
-      filters={[
-        {
-          key: "province",
-          label: "Tỉnh",
-          options: provinceOptions,
-        },
-      ]}
-      onFilterChange={onFilterChange}
       onView={onView}
-      onDelete={onDelete}
     />
   );
 }

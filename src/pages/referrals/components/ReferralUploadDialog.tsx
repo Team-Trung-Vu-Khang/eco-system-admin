@@ -12,6 +12,7 @@ import {
   Label,
   type Column,
 } from "@Team-Trung-Vu-Khang/eco-shared-ui";
+import type { BulkUploadReferrerJobResponse } from "@/api/referrers/referrers.response";
 import type { ReferralUploadReview } from "../data/referrals";
 
 type ReferralUploadDialogProps = {
@@ -20,8 +21,9 @@ type ReferralUploadDialogProps = {
   uploadFileName: string;
   uploadReview: ReferralUploadReview;
   uploadResult: ReferralUploadReview | null;
+  uploadJob: BulkUploadReferrerJobResponse | null;
   uploadLoading: boolean;
-  onFileLoaded: (text: string, fileName: string) => void;
+  onFileLoaded: (text: string, fileName: string, file: File) => void;
   onDownloadTemplate: () => void;
   onSubmit: () => void;
   onReset: () => void;
@@ -33,6 +35,7 @@ export function ReferralUploadDialog({
   uploadFileName,
   uploadReview,
   uploadResult,
+  uploadJob,
   uploadLoading,
   onFileLoaded,
   onDownloadTemplate,
@@ -98,6 +101,46 @@ export function ReferralUploadDialog({
         </DialogHeader>
 
         <div className="space-y-5 pb-2">
+          {uploadJob ? (
+            <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="font-semibold">Trạng thái job</p>
+                <Badge variant="secondary">{uploadJob.status}</Badge>
+              </div>
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
+                    Tiến độ
+                  </div>
+                  <div className="mt-1 text-sm">
+                    {uploadJob.progress.processedRows}/
+                    {uploadJob.progress.totalRows}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
+                    Kết quả
+                  </div>
+                  <div className="mt-1 text-sm">
+                    {uploadJob.result
+                      ? [
+                          `Tạo mới: ${uploadJob.result.created}`,
+                          `Nâng cấp: ${uploadJob.result.promoted}`,
+                          `Bỏ qua trùng: ${uploadJob.result.skippedDuplicates}`,
+                          `Lỗi: ${uploadJob.result.failed}`,
+                        ].join(" · ")
+                      : "Đang xử lý..."}
+                  </div>
+                </div>
+              </div>
+              {uploadJob.result?.errors.length ? (
+                <div className="mt-3 rounded-xl bg-white/70 p-3 text-xs text-slate-600">
+                  Lỗi gần nhất: {uploadJob.result.errors[0].message}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           <div className="rounded-2xl bg-slate-50 p-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <div className="space-y-2">
@@ -139,7 +182,7 @@ export function ReferralUploadDialog({
                 {uploadFileName || "Chưa có tệp nào được chọn"}
               </span>
             </div>
-            <input
+              <input
               ref={fileInputRef}
               type="file"
               accept=".csv,.txt"
@@ -149,7 +192,7 @@ export function ReferralUploadDialog({
                 if (!file) return;
 
                 const text = await file.text();
-                onFileLoaded(text, file.name);
+                onFileLoaded(text, file.name, file);
               }}
             />
           </div>
