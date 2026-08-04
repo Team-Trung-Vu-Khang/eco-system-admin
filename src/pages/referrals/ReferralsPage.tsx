@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import * as XLSX from "xlsx";
@@ -34,9 +40,10 @@ export function ReferralsPage() {
   const [pageSize, setPageSize] = useState(10);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const deferredSearchTerm = useDeferredValue(searchTerm);
   const appliedUploadJobIdRef = useRef<number | null>(null);
   const referrersQuery = useReferrersQuery({
-    keyword: searchTerm.trim() || undefined,
+    keyword: deferredSearchTerm,
     page: currentIndex,
     size: pageSize,
   });
@@ -63,6 +70,7 @@ export function ReferralsPage() {
   const uploadLoading =
     bulkUploadMutation.isPending || uploadJob?.status === "STARTED";
   const listLoading = referrersQuery.isPending || referrersQuery.isFetching;
+  const tableIndex = currentIndex + 1;
 
   const openCreate = () => {
     setLocation("/referrals/create");
@@ -157,12 +165,12 @@ export function ReferralsPage() {
       <ReferralListTable
         data={referrals}
         pageSize={pageSize}
-        currentIndex={currentIndex}
+        currentIndex={tableIndex}
         totalElements={referrersQuery.data?.totalElements ?? 0}
         totalPages={referrersQuery.data?.totalPages ?? 1}
         onSearch={handleSearch}
         onPageSize={setPageSize}
-        onIndexChange={setCurrentIndex}
+        onIndexChange={(value) => setCurrentIndex(Math.max(0, value - 1))}
         onView={openView}
         loading={listLoading}
       />

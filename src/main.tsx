@@ -5,12 +5,14 @@ import "@/index.css";
 import App from "@/App.tsx";
 import { AuthWrapper } from "@/components/AuthWrapper";
 import { queryClient } from "@/lib/queryClient";
+import { Toaster } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthWrapper>
         <App />
+        <Toaster />
       </AuthWrapper>
     </QueryClientProvider>
   </StrictMode>,

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,6 +14,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  toast,
 } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import { useCreateReferrerMutation } from "@/api/referrers/referrers.hooks";
 import { useProvincesQuery } from "@/api/provinces/provinces.hooks";
@@ -51,7 +52,6 @@ export function ReferralCreatePage() {
     size: 100,
   });
   const createReferrerMutation = useCreateReferrerMutation();
-  const [submitError, setSubmitError] = useState("");
 
   const {
     control,
@@ -73,8 +73,6 @@ export function ReferralCreatePage() {
   }, [provincesQuery.data?.content]);
 
   const onSubmit = async (values: ReferralCreateFormValues) => {
-    setSubmitError("");
-
     try {
       const normalizedPhone = normalizePhoneTo84(values.phone);
 
@@ -84,10 +82,17 @@ export function ReferralCreatePage() {
         province: values.province.trim(),
       });
 
+      toast({
+        title: "Tạo người giới thiệu thành công",
+      });
       setLocation("/referrals");
     } catch (error) {
       console.error(error);
-      setSubmitError("Không thể tạo người giới thiệu. Vui lòng thử lại.");
+      toast({
+        title: "Không thể tạo người giới thiệu",
+        description: "Vui lòng thử lại.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -219,10 +224,7 @@ export function ReferralCreatePage() {
           </div>
         </div>
 
-      <div className="flex flex-wrap justify-end gap-2 border-t border-black/5 pt-4">
-        {submitError ? (
-          <p className="mr-auto text-sm text-rose-600">{submitError}</p>
-        ) : null}
+        <div className="flex flex-wrap justify-end gap-2 border-t border-black/5 pt-4">
           <Button
             variant="outline"
             type="button"
@@ -230,23 +232,23 @@ export function ReferralCreatePage() {
           >
             Hủy
           </Button>
-        <Button
-          type="submit"
-          disabled={
-            !isDirty || createReferrerMutation.isPending || isSubmitting
-          }
-        >
-          {createReferrerMutation.isPending || isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Đang tạo...
-            </>
-          ) : (
-            "Tạo thông tin"
-          )}
-        </Button>
-      </div>
-    </form>
-  </section>
+          <Button
+            type="submit"
+            disabled={
+              !isDirty || createReferrerMutation.isPending || isSubmitting
+            }
+          >
+            {createReferrerMutation.isPending || isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Đang tạo...
+              </>
+            ) : (
+              "Tạo thông tin"
+            )}
+          </Button>
+        </div>
+      </form>
+    </section>
   );
 }

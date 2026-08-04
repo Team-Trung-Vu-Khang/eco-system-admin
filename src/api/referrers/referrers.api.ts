@@ -14,8 +14,10 @@ import type { UpdateReferrerStatusResponse } from "./referrers.response";
 function buildReferrerListParams(
   query: GetReferrersRequest = {},
 ): ApiQueryParams {
+  const keyword = query.keyword?.trim() ?? "";
+
   return {
-    keyword: query.keyword,
+    keyword,
     page: query.page,
     size: query.size,
   };
