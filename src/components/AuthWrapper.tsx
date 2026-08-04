@@ -1,12 +1,10 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { AuthLoadingState } from "@/components/AuthLoadingState";
 import {
-  buildAuthLoginUrl,
+  authApi,
   clearAuthToken,
   getAuthToken,
-  getDefaultAuthProvider,
-  setAuthToken,
-} from "@/api/auth/auth";
+} from "@/api/auth/auth.api";
 import { queryClient } from "@/lib/queryClient";
 import { QUERY_KEY } from "@/constants/query-key.constant";
 import { PATH } from "@/constants/path.constant";
@@ -23,22 +21,15 @@ export function AuthWrapper({ children }: AuthWrapperProps) {
       return;
     }
 
-    let isMounted = true;
     const currentUrl = new URL(window.location.href);
+    const isLoginRoute = currentUrl.pathname.startsWith(PATH.AUTH.LOGIN);
     const isCallbackRoute = currentUrl.pathname.startsWith(PATH.AUTH.CALLBACK);
     const tokenFromUrl = currentUrl.searchParams.get("token");
     const storedToken = getAuthToken();
 
-    const redirectToLogin = () => {
-      const callbackUrl = `${window.location.origin}${PATH.AUTH.CALLBACK}`;
-      window.location.replace(
-        buildAuthLoginUrl(getDefaultAuthProvider(), callbackUrl),
-      );
-    };
-
     if (isCallbackRoute) {
       if (tokenFromUrl) {
-        setAuthToken(tokenFromUrl);
+        authApi.setToken(tokenFromUrl);
         queryClient.setQueryData(QUERY_KEY.AUTH.SESSION, tokenFromUrl);
         currentUrl.searchParams.delete("token");
         window.history.replaceState(
@@ -57,24 +48,29 @@ export function AuthWrapper({ children }: AuthWrapperProps) {
       }
 
       clearAuthToken();
-      redirectToLogin();
+      authApi.startLogin(authApi.getDefaultProvider());
+      return;
+    }
+
+    if (isLoginRoute) {
+      if (storedToken) {
+        queryClient.setQueryData(QUERY_KEY.AUTH.SESSION, storedToken);
+        window.location.replace(PATH.APP.HOME);
+        return;
+      }
+
+      setIsReady(true);
       return;
     }
 
     if (storedToken) {
       queryClient.setQueryData(QUERY_KEY.AUTH.SESSION, storedToken);
-      if (isMounted) {
-        setIsReady(true);
-      }
+      setIsReady(true);
       return;
     }
 
     clearAuthToken();
-    redirectToLogin();
-
-    return () => {
-      isMounted = false;
-    };
+    authApi.startLogin(authApi.getDefaultProvider());
   }, []);
 
   if (!isReady) {

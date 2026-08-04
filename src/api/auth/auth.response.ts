@@ -13,3 +13,7 @@ export type AuthLoginResult =
       token: string;
     }
   | AuthLoginRedirectResponse;
+
+export type AuthMeResponse<TUser = unknown> = {
+  data: TUser;
+};
