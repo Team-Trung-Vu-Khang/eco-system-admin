@@ -11,6 +11,16 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+  server: {
+    host: "localhost",
+    port: 3000,
+    strictPort: true,
+  },
+  preview: {
+    host: "localhost",
+    port: 3000,
+    strictPort: true,
+  },
   plugins: [
     tailwindcss(),
     react(),

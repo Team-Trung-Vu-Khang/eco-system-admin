@@ -1,79 +1,63 @@
-import { apiClient } from "../apiClient";
-import { authStorage } from "./auth.storage";
+import { PATH } from "@/constants/path.constant";
 import type { AuthProvider } from "./auth.request";
+import {
+  API_BASE_URL,
+  AUTH_POST_LOGOUT_REDIRECT_URL,
+} from "@/constants/api.constant";
+import { apiClient } from "../apiClient";
 import type { AuthMeResponse } from "./auth.response";
-import { PATH } from "../../constants/path.constant";
 
-const DEFAULT_AUTH_PROVIDER: AuthProvider = "center";
+const AUTH_TOKEN_STORAGE_KEY = "accessToken";
+const buildCallbackUrl = () => `${window.location.origin}${PATH.AUTH.CALLBACK}`;
 
-export function getAuthToken() {
-  return authStorage.getToken();
-}
-
-export function setAuthToken(token: string) {
-  authStorage.setToken(token);
-}
-
-export function clearAuthToken() {
-  authStorage.clearToken();
-}
-
-export function getDefaultAuthProvider() {
-  return DEFAULT_AUTH_PROVIDER;
-}
-
-export function buildAuthLoginUrl(
-  provider: AuthProvider,
-  callbackUrl?: string,
-) {
-  const url = new URL(apiClient.resolveUrl(`${PATH.AUTH.LOGIN}/${provider}`));
-
-  if (callbackUrl) {
-    url.searchParams.set("callback_url", callbackUrl);
-  }
-
-  return url.toString();
-}
+export const authStorage = {
+  getToken(): string | null {
+    return sessionStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+  },
+  setToken(token: string) {
+    sessionStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+  },
+  clearToken() {
+    sessionStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+  },
+};
 
 export const authApi = {
-  getToken: authStorage.getToken,
-  setToken: authStorage.setToken,
-  clearToken: authStorage.clearToken,
+  getToken() {
+    return authStorage.getToken();
+  },
+  setToken(token: string) {
+    authStorage.setToken(token);
+  },
+  clearToken() {
+    authStorage.clearToken();
+  },
   getCallbackUrl() {
-    return `${window.location.origin}${PATH.AUTH.CALLBACK}`;
+    return buildCallbackUrl();
   },
   buildLoginUrl(provider: AuthProvider) {
-    return buildAuthLoginUrl(
-      provider,
-      `${window.location.origin}${PATH.AUTH.CALLBACK}`,
-    );
+    const callbackUrl = this.getCallbackUrl();
+    return `${API_BASE_URL}${PATH.AUTH.LOGIN}/${encodeURIComponent(provider)}?callback_url=${encodeURIComponent(callbackUrl)}`;
   },
   startLogin(provider: AuthProvider) {
-    window.location.replace(
-      buildAuthLoginUrl(provider, `${window.location.origin}${PATH.AUTH.CALLBACK}`),
-    );
+    window.location.replace(this.buildLoginUrl(provider));
   },
   getCallbackToken() {
     return new URLSearchParams(window.location.search).get("token");
   },
   async getMe(token = authStorage.getToken()) {
-    return authApi.getCurrentUser(token);
+    return this.getCurrentUser(token);
   },
   async getCurrentUser(token = authStorage.getToken()) {
     if (!token) {
       throw new Error("Missing auth token");
     }
 
-    const response = await apiClient.get<AuthMeResponse>(
-      PATH.AUTH.ME,
-      token
-        ? {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        : undefined,
-    );
+    const response = await apiClient.get<AuthMeResponse>(PATH.AUTH.ME, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     return response.data;
   },
@@ -81,31 +65,27 @@ export const authApi = {
     const token = authStorage.getToken();
 
     if (!token) {
-      window.location.replace(PATH.APP.HOME);
+      window.location.replace(AUTH_POST_LOGOUT_REDIRECT_URL);
       return;
     }
 
     try {
-      await apiClient.post(
-        PATH.AUTH.LOGOUT,
-        null,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          params: {
-            post_logout_redirect_uri: `${window.location.origin}${PATH.APP.HOME}`,
-          },
+      await apiClient.post(PATH.AUTH.LOGOUT, null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+        params: {
+          post_logout_redirect_uri: AUTH_POST_LOGOUT_REDIRECT_URL,
+        },
+      });
     } catch {
       // Ignore logout API failures and still continue to redirect.
     } finally {
       authStorage.clearToken();
-      window.location.replace(PATH.APP.HOME);
+      window.location.replace(AUTH_POST_LOGOUT_REDIRECT_URL);
     }
   },
   getDefaultProvider() {
-    return DEFAULT_AUTH_PROVIDER;
+    return "farm" as AuthProvider;
   },
 };

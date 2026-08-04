@@ -1,77 +1,44 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { AuthLoadingState } from "@/components/AuthLoadingState";
-import {
-  authApi,
-  clearAuthToken,
-  getAuthToken,
-} from "@/api/auth/auth.api";
-import { queryClient } from "@/lib/queryClient";
-import { QUERY_KEY } from "@/constants/query-key.constant";
+import { type ReactNode, useEffect, useState } from "react";
+import { AuthLoadingState } from "./AuthLoadingState";
 import { PATH } from "@/constants/path.constant";
+import { authApi } from "@/api/auth/auth.api";
 
-type AuthWrapperProps = {
-  children: ReactNode;
-};
-
-export function AuthWrapper({ children }: AuthWrapperProps) {
+export function AuthWrapper({ children }: { children: ReactNode }) {
   const [isReady, setIsReady] = useState(false);
+  const isCallbackRoute = window.location.pathname.startsWith(
+    PATH.AUTH.CALLBACK,
+  );
+  const run = async () => {
+    try {
+      if (isCallbackRoute) {
+        const tokenFromUrl = authApi.getCallbackToken();
+        console.log(tokenFromUrl);
+        if (!tokenFromUrl) {
+          authApi.startLogin(authApi.getDefaultProvider());
+          return;
+        }
+
+        authApi.setToken(tokenFromUrl);
+        window.location.replace("/");
+        return;
+      }
+
+      const token = authApi.getToken();
+      console.log(token);
+      if (!token) {
+        authApi.startLogin(authApi.getDefaultProvider());
+        return;
+      }
+
+      setIsReady(true);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const currentUrl = new URL(window.location.href);
-    const isLoginRoute = currentUrl.pathname.startsWith(PATH.AUTH.LOGIN);
-    const isCallbackRoute = currentUrl.pathname.startsWith(PATH.AUTH.CALLBACK);
-    const tokenFromUrl = currentUrl.searchParams.get("token");
-    const storedToken = getAuthToken();
-
-    if (isCallbackRoute) {
-      if (tokenFromUrl) {
-        authApi.setToken(tokenFromUrl);
-        queryClient.setQueryData(QUERY_KEY.AUTH.SESSION, tokenFromUrl);
-        currentUrl.searchParams.delete("token");
-        window.history.replaceState(
-          {},
-          "",
-          `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`,
-        );
-        window.location.replace(PATH.APP.HOME);
-        return;
-      }
-
-      if (storedToken) {
-        queryClient.setQueryData(QUERY_KEY.AUTH.SESSION, storedToken);
-        window.location.replace(PATH.APP.HOME);
-        return;
-      }
-
-      clearAuthToken();
-      authApi.startLogin(authApi.getDefaultProvider());
-      return;
-    }
-
-    if (isLoginRoute) {
-      if (storedToken) {
-        queryClient.setQueryData(QUERY_KEY.AUTH.SESSION, storedToken);
-        window.location.replace(PATH.APP.HOME);
-        return;
-      }
-
-      setIsReady(true);
-      return;
-    }
-
-    if (storedToken) {
-      queryClient.setQueryData(QUERY_KEY.AUTH.SESSION, storedToken);
-      setIsReady(true);
-      return;
-    }
-
-    clearAuthToken();
-    authApi.startLogin(authApi.getDefaultProvider());
-  }, []);
+    run();
+  }, [isCallbackRoute]);
 
   if (!isReady) {
     return <AuthLoadingState />;
