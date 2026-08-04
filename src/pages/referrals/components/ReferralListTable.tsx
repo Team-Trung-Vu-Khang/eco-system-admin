@@ -12,7 +12,6 @@ type ReferralListTableProps = {
   onSearch: (value: string) => void;
   onPageSize: (value: number) => void;
   onIndexChange: (value: number) => void;
-  onView: (row: ReferralRow) => void;
 };
 
 export function ReferralListTable({
@@ -25,7 +24,6 @@ export function ReferralListTable({
   onSearch,
   onPageSize,
   onIndexChange,
-  onView,
 }: ReferralListTableProps) {
   const columns: Column<ReferralRow>[] = useMemo(
     () => [

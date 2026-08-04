@@ -15,7 +15,6 @@ import {
   useReferrersQuery,
 } from "@/api/referrers/referrers.hooks";
 import {
-  type ReferralRow,
   type ReferralUploadReview,
   buildReferralTemplateWorkbook,
   mapReferrerToReferralRow,
@@ -74,10 +73,6 @@ export function ReferralsPage() {
 
   const openCreate = () => {
     setLocation("/referrals/create");
-  };
-
-  const openView = (referral: ReferralRow) => {
-    setLocation(`/referrals/${referral.id}`);
   };
 
   const handleSearch = (value: string) => {
@@ -171,7 +166,6 @@ export function ReferralsPage() {
         onSearch={handleSearch}
         onPageSize={setPageSize}
         onIndexChange={(value) => setCurrentIndex(Math.max(0, value - 1))}
-        onView={openView}
         loading={listLoading}
       />
 

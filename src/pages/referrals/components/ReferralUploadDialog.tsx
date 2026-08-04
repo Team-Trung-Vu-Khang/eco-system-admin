@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   Label,
+  Progress,
   type Column,
 } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import { parseReferralUploadFile } from "../data/referrals";
@@ -46,6 +47,37 @@ export function ReferralUploadDialog({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const rows = uploadResult?.rows ?? uploadReview.rows;
   const currentSummary = uploadResult ?? uploadReview;
+  const uploadProgress = uploadJob?.progress ?? null;
+  const processedRows = uploadProgress?.processedRows ?? 0;
+  const totalRows = uploadProgress?.totalRows ?? 0;
+  const progressValue =
+    totalRows > 0
+      ? Math.min(100, Math.round((processedRows / totalRows) * 100))
+      : uploadJob?.result
+        ? 100
+        : 0;
+  const progressLabel = uploadJob?.result
+    ? "Hoàn tất"
+    : uploadProgress
+      ? `${processedRows}/${totalRows}`
+      : "Đang chờ cập nhật";
+  const jobStatusLabel = (() => {
+    const status = uploadJob?.status?.toUpperCase() ?? "";
+
+    switch (status) {
+      case "STARTED":
+        return "Đang xử lý";
+      case "COMPLETED":
+        return "Hoàn tất";
+      case "FAILED":
+        return "Thất bại";
+      case "CANCELLED":
+      case "CANCELED":
+        return "Đã huỷ";
+      default:
+        return uploadJob?.status ?? "Không rõ";
+    }
+  })();
   const reviewColumns: Column<ReferralUploadReview["rows"][number]>[] = [
     { key: "lineNumber", label: "Dòng", width: "80px" },
     { key: "phone", label: "Số điện thoại", width: "150px" },
@@ -102,46 +134,6 @@ export function ReferralUploadDialog({
         </DialogHeader>
 
         <div className="space-y-5 pb-2">
-          {uploadJob ? (
-            <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-semibold">Trạng thái job</p>
-                <Badge variant="secondary">{uploadJob.status}</Badge>
-              </div>
-              <div className="mt-3 grid gap-3 md:grid-cols-2">
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
-                    Tiến độ
-                  </div>
-                  <div className="mt-1 text-sm">
-                    {uploadJob.progress.processedRows}/
-                    {uploadJob.progress.totalRows}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
-                    Kết quả
-                  </div>
-                  <div className="mt-1 text-sm">
-                    {uploadJob.result
-                      ? [
-                          `Tạo mới: ${uploadJob.result.created}`,
-                          `Nâng cấp: ${uploadJob.result.promoted}`,
-                          `Bỏ qua trùng: ${uploadJob.result.skippedDuplicates}`,
-                          `Lỗi: ${uploadJob.result.failed}`,
-                        ].join(" · ")
-                      : "Đang xử lý..."}
-                  </div>
-                </div>
-              </div>
-              {uploadJob.result?.errors.length ? (
-                <div className="mt-3 rounded-xl bg-white/70 p-3 text-xs text-slate-600">
-                  Lỗi gần nhất: {uploadJob.result.errors[0].message}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
           <div className="rounded-2xl bg-slate-50 p-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <div className="space-y-2">
@@ -235,6 +227,54 @@ export function ReferralUploadDialog({
               </div>
             )}
           </div>
+          {uploadJob ? (
+            <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="font-semibold">Trạng thái tải lên</p>
+                <Badge variant="secondary">{jobStatusLabel}</Badge>
+              </div>
+              <div className="mt-3 space-y-3">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
+                    Kết quả
+                  </div>
+                  <div className="mt-1 text-sm">
+                    {uploadJob.result
+                      ? [
+                          `Tạo mới: ${uploadJob.result.created}`,
+                          `Nâng cấp: ${uploadJob.result.promoted}`,
+                          `Bỏ qua trùng: ${uploadJob.result.skippedDuplicates}`,
+                          `Lỗi: ${uploadJob.result.failed}`,
+                        ].join(" · ")
+                      : "Đang xử lý..."}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
+                    Tiến độ
+                  </div>
+                  <div className="mt-2 space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>{progressLabel}</span>
+                      <span className="font-medium">
+                        {uploadJob.result ? "100%" : `${progressValue}%`}
+                      </span>
+                    </div>
+                    <Progress
+                      value={progressValue}
+                      className="h-2 rounded-full bg-sky-100"
+                    />
+                  </div>
+                </div>
+              </div>
+              {uploadJob.result?.errors.length ? (
+                <div className="mt-3 rounded-xl bg-white/70 p-3 text-xs text-slate-600">
+                  Lỗi gần nhất: {uploadJob.result.errors[0].message}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <DialogFooter>
