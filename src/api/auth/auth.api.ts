@@ -10,6 +10,13 @@ import type { AuthMeResponse } from "./auth.response";
 const AUTH_TOKEN_STORAGE_KEY = "accessToken";
 const buildCallbackUrl = () => `${window.location.origin}${PATH.AUTH.CALLBACK}`;
 
+export function buildAuthLoginUrl(
+  provider: AuthProvider,
+  callbackUrl = buildCallbackUrl(),
+) {
+  return `${API_BASE_URL}${PATH.AUTH.LOGIN}/${encodeURIComponent(provider)}?callback_url=${encodeURIComponent(callbackUrl)}`;
+}
+
 export const authStorage = {
   getToken(): string | null {
     return sessionStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
@@ -36,8 +43,7 @@ export const authApi = {
     return buildCallbackUrl();
   },
   buildLoginUrl(provider: AuthProvider) {
-    const callbackUrl = this.getCallbackUrl();
-    return `${API_BASE_URL}${PATH.AUTH.LOGIN}/${encodeURIComponent(provider)}?callback_url=${encodeURIComponent(callbackUrl)}`;
+    return buildAuthLoginUrl(provider, this.getCallbackUrl());
   },
   startLogin(provider: AuthProvider) {
     window.location.replace(this.buildLoginUrl(provider));

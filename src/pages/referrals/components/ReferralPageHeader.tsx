@@ -11,8 +11,8 @@ export function ReferralPageHeader({
   onCreateClick,
 }: ReferralPageHeaderProps) {
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div className="space-y-3">
+    <div className="flex w-full flex-wrap items-start justify-between gap-4">
+      <div className="min-w-0 flex-1 space-y-3">
         <div className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-black/5 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
           <Users className="h-3.5 w-3.5" />
           Quản trị hệ thống
@@ -28,7 +28,7 @@ export function ReferralPageHeader({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex shrink-0 flex-wrap gap-2">
         <Button variant="outline" onClick={onUploadClick}>
           <Upload className="mr-2 h-4 w-4" />
           Nhập dữ liệu

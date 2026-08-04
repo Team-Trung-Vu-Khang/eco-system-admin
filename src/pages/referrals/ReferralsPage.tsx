@@ -159,7 +159,7 @@ export function ReferralsPage() {
   };
 
   return (
-    <section className="space-y-6 rounded-3xl border border-black/5 bg-white/80 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur md:p-8">
+    <section className="w-full space-y-6 rounded-3xl border border-black/5 bg-white/80 p-5 text-left shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur md:p-8">
       <ReferralPageHeader
         onUploadClick={() => setUploadOpen(true)}
         onCreateClick={openCreate}
