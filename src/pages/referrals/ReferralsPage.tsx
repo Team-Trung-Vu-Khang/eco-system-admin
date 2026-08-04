@@ -28,20 +28,14 @@ export function ReferralsPage() {
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>(
     {},
   );
-  const {
-    referrals,
-    deleteReferral,
-    upsertManyReferrals,
-  } = useReferralsStore();
+  const { referrals, deleteReferral, upsertManyReferrals } =
+    useReferralsStore();
 
   const provinceOptions = useMemo(() => {
     const values = Array.from(
       new Set(referrals.map((item) => item.province)),
     ).sort();
-    return [
-      { label: "Tất cả", value: "" },
-      ...values.map((value) => ({ label: value, value })),
-    ];
+    return [...values.map((value) => ({ label: value, value }))];
   }, [referrals]);
 
   const uploadReview = useMemo(

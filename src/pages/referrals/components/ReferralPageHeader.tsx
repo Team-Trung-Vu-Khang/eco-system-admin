@@ -22,8 +22,8 @@ export function ReferralPageHeader({
             Quản lý người giới thiệu
           </h2>
           <p className="max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
-            Danh sách người giới thiệu. Có thể nhập dữ liệu, tạo mới hoặc mở
-            chi tiết để chỉnh sửa trên trang riêng.
+            Danh sách người giới thiệu. Có thể nhập dữ liệu, tạo mới hoặc mở chi
+            tiết để chỉnh sửa trên trang riêng.
           </p>
         </div>
       </div>
@@ -35,7 +35,7 @@ export function ReferralPageHeader({
         </Button>
         <Button onClick={onCreateClick}>
           <Plus className="mr-2 h-4 w-4" />
-          Tạo thông tin
+          Thêm mới
         </Button>
       </div>
     </div>
