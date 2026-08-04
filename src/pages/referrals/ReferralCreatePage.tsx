@@ -12,13 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@Team-Trung-Vu-Khang/eco-shared-ui";
+import { useCreateReferrerMutation } from "@/api/referrers/referrers.hooks";
 import {
   initialReferralFormValues,
   normalizePhoneTo84,
   type ReferralFormErrors,
   type ReferralFormValues,
 } from "./data/referrals";
-import { useReferralsStore } from "./hooks/useReferralsStore";
+import { useProvincesQuery } from "@/api/provinces/provinces.hooks";
 
 function validate(values: ReferralFormValues) {
   const errors: ReferralFormErrors = {};
@@ -38,44 +39,44 @@ function validate(values: ReferralFormValues) {
 
 export function ReferralCreatePage() {
   const [, setLocation] = useLocation();
-  const { referrals, createReferral } = useReferralsStore();
+  const provincesQuery = useProvincesQuery({
+    status: "active",
+    page: 0,
+    size: 100,
+  });
+  const createReferrerMutation = useCreateReferrerMutation();
   const [formValues, setFormValues] = useState<ReferralFormValues>(
     initialReferralFormValues,
   );
   const [formErrors, setFormErrors] = useState<ReferralFormErrors>({});
-  const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const provinceOptions = useMemo(() => {
-    const values = Array.from(
-      new Set(referrals.map((item) => item.province)),
-    ).sort();
-    return values.map((value) => ({ label: value, value }));
-  }, [referrals]);
+    return (
+      provincesQuery.data?.content.map((province) => ({
+        label: province.fullName,
+        value: province.fullName,
+      })) ?? []
+    );
+  }, [provincesQuery.data?.content]);
 
   const onSubmit = async () => {
     const nextErrors = validate(formValues);
     setFormErrors(nextErrors);
+    setSubmitError("");
     if (Object.keys(nextErrors).length > 0) return;
 
     const normalizedPhone = normalizePhoneTo84(formValues.phone);
-    const duplicate = referrals.find((item) => item.phone === normalizedPhone);
-    if (duplicate) {
-      setFormErrors({
-        phone:
-          "Số điện thoại này đã tồn tại. Hãy kiểm tra bản ghi cũ trước khi tạo mới.",
-      });
-      return;
-    }
-
-    setLoading(true);
     try {
-      createReferral({
-        ...formValues,
-        phone: normalizedPhone,
+      await createReferrerMutation.mutateAsync({
+        phoneNumber: normalizedPhone,
+        fullName: formValues.fullName.trim(),
+        province: formValues.province.trim(),
       });
       setLocation("/referrals");
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      setSubmitError("Không thể tạo người giới thiệu. Vui lòng thử lại.");
     }
   };
 
@@ -192,6 +193,9 @@ export function ReferralCreatePage() {
       </div>
 
       <div className="flex flex-wrap justify-end gap-2 border-t border-black/5 pt-4">
+        {submitError ? (
+          <p className="mr-auto text-sm text-rose-600">{submitError}</p>
+        ) : null}
         <Button
           variant="outline"
           type="button"
@@ -199,7 +203,11 @@ export function ReferralCreatePage() {
         >
           Hủy
         </Button>
-        <Button type="button" disabled={loading} onClick={onSubmit}>
+        <Button
+          type="button"
+          disabled={createReferrerMutation.isPending}
+          onClick={onSubmit}
+        >
           Tạo thông tin
         </Button>
       </div>
