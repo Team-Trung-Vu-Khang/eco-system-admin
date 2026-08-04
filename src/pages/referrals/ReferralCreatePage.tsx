@@ -86,6 +86,7 @@ export function ReferralCreatePage() {
         onSuccess: () => {
           toast({
             title: "Tạo người giới thiệu thành công",
+            duration: 2000,
           });
           setLocation("/referrals");
         },
@@ -96,7 +97,7 @@ export function ReferralCreatePage() {
             title: "Không thể tạo người giới thiệu",
             description: "Vui lòng thử lại.",
             variant: "destructive",
-            duration: 300,
+            duration: 2000,
           });
         },
       },
