@@ -5,6 +5,15 @@ export const PATH = {
     ME: "/auth/me",
     LOGOUT: "/auth/logout",
   },
+  REFERRERS: {
+    LIST: "/api/admin/referrers",
+    CREATE: "/api/admin/referrers",
+    UPDATE_STATUS: (userId: number | string) =>
+      `/api/admin/referrers/${userId}/status`,
+    BULK_UPLOAD: "/api/admin/referrers/bulk-upload",
+    BULK_UPLOAD_JOB: (jobExecutionId: number | string) =>
+      `/api/admin/referrers/bulk-upload/${jobExecutionId}`,
+  },
   APP: {
     HOME: "/users",
   },
