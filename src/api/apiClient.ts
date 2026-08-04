@@ -1,5 +1,11 @@
-import { authStorage } from "@/api/auth/auth.storage";
+import axios, {
+  AxiosHeaders,
+  type AxiosInstance,
+  type AxiosRequestConfig,
+} from "axios";
 import { API_BASE_URL } from "@/constants/api.constant";
+import { attachApiRequestMiddleware } from "./middlewares/request.middleware";
+import { attachApiResponseMiddleware } from "./middlewares/response.middleware";
 
 type ApiClientOptions = {
   baseUrl?: string;
@@ -8,9 +14,13 @@ type ApiClientOptions = {
 export type ApiQueryValue = string | number | boolean | null | undefined;
 export type ApiQueryParams = Record<string, ApiQueryValue>;
 
-export type ApiClientRequestOptions = Omit<RequestInit, "body"> & {
-  body?: BodyInit | Record<string, unknown> | null;
+export type ApiClientRequestOptions = Omit<
+  AxiosRequestConfig,
+  "baseURL" | "url" | "data" | "params" | "headers"
+> & {
+  body?: AxiosRequestConfig["data"];
   params?: ApiQueryParams;
+  headers?: AxiosRequestConfig["headers"];
 };
 
 function resolveApiUrl(path: string, baseUrl = API_BASE_URL) {
@@ -25,66 +35,52 @@ function resolveApiUrl(path: string, baseUrl = API_BASE_URL) {
   return path;
 }
 
-function appendQueryParams(url: URL, params?: ApiQueryParams) {
-  if (!params) {
-    return;
-  }
-
-  for (const [key, value] of Object.entries(params)) {
-    if (value === null || value === undefined) {
-      continue;
-    }
-
-    url.searchParams.set(key, String(value));
-  }
+function toAxiosHeaders(
+  headers: AxiosRequestConfig["headers"] | undefined,
+): AxiosHeaders {
+  return AxiosHeaders.from(headers as any);
 }
 
 export class ApiClient {
-  private readonly baseUrl?: string;
+  private readonly client: AxiosInstance;
 
   constructor(options: ApiClientOptions = {}) {
-    this.baseUrl = options.baseUrl;
+    this.client = axios.create({
+      baseURL: options.baseUrl ?? API_BASE_URL,
+      timeout: 30_000,
+      withCredentials: true,
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    attachApiRequestMiddleware(this.client);
+    attachApiResponseMiddleware(this.client);
   }
 
   resolveUrl(path: string) {
-    return resolveApiUrl(path, this.baseUrl);
+    return resolveApiUrl(path, this.client.defaults.baseURL);
   }
 
-  async request<TResponse>(path: string, init?: ApiClientRequestOptions) {
-    const url = new URL(this.resolveUrl(path));
-    appendQueryParams(url, init?.params);
-    const authToken = authStorage.getToken();
-    const isJsonBody =
-      init?.body &&
-      typeof init.body === "object" &&
-      !(init.body instanceof FormData) &&
-      !(init.body instanceof Blob) &&
-      !(init.body instanceof URLSearchParams) &&
-      !(init.body instanceof ArrayBuffer);
-    const requestBody: BodyInit | null | undefined = isJsonBody
-      ? JSON.stringify(init.body)
-      : (init?.body as BodyInit | null | undefined);
-
-    const response = await fetch(url.toString(), {
-      credentials: "include",
-      ...init,
-      headers: {
-        Accept: "application/json",
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-        ...(isJsonBody ? { "Content-Type": "application/json" } : {}),
-        ...(init?.headers ?? {}),
-      },
-      body: requestBody,
+  async request<TResponse>(path: string, init: ApiClientRequestOptions = {}) {
+    const response = await this.client.request<TResponse>({
+      url: path,
+      method: init.method,
+      params: init.params,
+      data: init.body,
+      headers: toAxiosHeaders(init.headers),
+      signal: init.signal,
+      timeout: init.timeout,
+      withCredentials: init.withCredentials,
+      responseType: init.responseType,
+      maxBodyLength: init.maxBodyLength,
+      maxContentLength: init.maxContentLength,
+      onDownloadProgress: init.onDownloadProgress,
+      onUploadProgress: init.onUploadProgress,
+      validateStatus: init.validateStatus,
     });
 
-    if (!response.ok) {
-      const errorBody = await response.text().catch(() => "");
-      throw new Error(
-        errorBody || `Request failed with status ${response.status}`,
-      );
-    }
-
-    return (await response.json()) as TResponse;
+    return response.data;
   }
 
   async get<TResponse>(path: string, init?: ApiClientRequestOptions) {
@@ -102,6 +98,18 @@ export class ApiClient {
     return this.request<TResponse>(path, {
       ...init,
       method: "POST",
+      body,
+    });
+  }
+
+  async put<TResponse>(
+    path: string,
+    body?: ApiClientRequestOptions["body"],
+    init?: ApiClientRequestOptions,
+  ) {
+    return this.request<TResponse>(path, {
+      ...init,
+      method: "PUT",
       body,
     });
   }

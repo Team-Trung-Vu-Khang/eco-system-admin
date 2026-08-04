@@ -3,6 +3,7 @@ export const PATH = {
     LOGIN: "/auth/login",
     CALLBACK: "/auth/callback",
     ME: "/auth/me",
+    REFRESH: "/auth/refresh",
     LOGOUT: "/auth/logout",
   },
   REFERRERS: {
