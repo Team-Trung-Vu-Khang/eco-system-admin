@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
+import * as XLSX from "xlsx";
 import { QUERY_KEY } from "@/constants/query-key.constant";
 import {
   useBulkUploadReferrerJobQuery,
@@ -10,7 +11,9 @@ import {
 import {
   type ReferralRow,
   type ReferralUploadReview,
+  buildReferralTemplateWorkbook,
   mapReferrerToReferralRow,
+  referralTemplateFileName,
   reviewReferralUploadText,
 } from "./data/referrals";
 import { ReferralListTable } from "./components/ReferralListTable";
@@ -43,7 +46,7 @@ export function ReferralsPage() {
   );
   const referrals = useMemo(
     () =>
-      referrersQuery.data?.content.map(mapReferrerToReferralRow) ?? [],
+      referrersQuery.data?.content?.map(mapReferrerToReferralRow) ?? [],
     [referrersQuery.data?.content],
   );
 
@@ -92,17 +95,19 @@ export function ReferralsPage() {
   };
 
   const downloadReferralTemplate = () => {
-    const template = [
-      "Số điện thoại,Tên,Tỉnh",
-      "0901234567,Nguyễn Văn A,TP. Hồ Chí Minh",
-      "0902123456,Trần Thị B,Hà Nội",
-    ].join("\n");
+    const workbook = buildReferralTemplateWorkbook();
+    const binary = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
 
-    const blob = new Blob([template], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob([binary], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "mau-nguoi-gioi-thieu.csv";
+    link.download = referralTemplateFileName;
     document.body.appendChild(link);
     link.click();
     link.remove();

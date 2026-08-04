@@ -1,4 +1,5 @@
 import { Badge, type Column } from "@Team-Trung-Vu-Khang/eco-shared-ui";
+import { getFeatureDuplicateMessage } from "@/constants/message.constant";
 import {
   normalizeRoleValue,
   normalizeStatusValue,
@@ -156,7 +157,7 @@ export function reviewUserUploadText(
     if (!role.trim()) reasons.push("Thiếu vai trò");
     if (!status.trim()) reasons.push("Thiếu trạng thái");
     if (emailKey && seenEmailsInFile.has(emailKey)) {
-      reasons.push("Email bị trùng trong tệp");
+      reasons.push(`${getFeatureDuplicateMessage("users")} trong tệp`);
     }
 
     const valid = reasons.length === 0;

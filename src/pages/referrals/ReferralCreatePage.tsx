@@ -1,6 +1,9 @@
 import { useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation } from "wouter";
-import { ArrowLeft, Users } from "lucide-react";
+import { ArrowLeft, Loader2, Users } from "lucide-react";
 import {
   Button,
   AutoCompleteSelect,
@@ -13,29 +16,32 @@ import {
   SelectValue,
 } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import { useCreateReferrerMutation } from "@/api/referrers/referrers.hooks";
-import {
-  initialReferralFormValues,
-  normalizePhoneTo84,
-  type ReferralFormErrors,
-  type ReferralFormValues,
-} from "./data/referrals";
 import { useProvincesQuery } from "@/api/provinces/provinces.hooks";
+import { normalizePhoneTo84 } from "./data/referrals";
 
-function validate(values: ReferralFormValues) {
-  const errors: ReferralFormErrors = {};
-  const normalizedPhone = normalizePhoneTo84(values.phone);
+const referralCreateSchema = z.object({
+  fullName: z.string().trim().min(1, "Vui lòng nhập tên"),
+  phone: z
+    .string()
+    .trim()
+    .min(1, "Vui lòng nhập số điện thoại")
+    .refine((value) => normalizePhoneTo84(value).startsWith("84"), {
+      message: "Số điện thoại phải quy về đầu 84",
+    }),
+  province: z.string().trim().min(1, "Vui lòng chọn nhập tỉnh"),
+  status: z.enum(["Hoạt động", "Khoá"], {
+    message: "Vui lòng chọn trạng thái",
+  }),
+});
 
-  if (!values.phone.trim()) errors.phone = "Vui lòng nhập số điện thoại";
-  else if (!normalizedPhone.startsWith("84")) {
-    errors.phone = "Số điện thoại phải quy về đầu 84";
-  }
+type ReferralCreateFormValues = z.infer<typeof referralCreateSchema>;
 
-  if (!values.fullName.trim()) errors.fullName = "Vui lòng nhập tên";
-  if (!values.province.trim()) errors.province = "Vui lòng nhập tỉnh";
-  if (!values.status.trim()) errors.status = "Vui lòng chọn trạng thái";
-
-  return errors;
-}
+const defaultValues: ReferralCreateFormValues = {
+  fullName: "",
+  phone: "",
+  province: "",
+  status: "Hoạt động",
+};
 
 export function ReferralCreatePage() {
   const [, setLocation] = useLocation();
@@ -45,46 +51,44 @@ export function ReferralCreatePage() {
     size: 100,
   });
   const createReferrerMutation = useCreateReferrerMutation();
-  const [formValues, setFormValues] = useState<ReferralFormValues>(
-    initialReferralFormValues,
-  );
-  const [formErrors, setFormErrors] = useState<ReferralFormErrors>({});
   const [submitError, setSubmitError] = useState("");
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting, isDirty },
+  } = useForm<ReferralCreateFormValues>({
+    resolver: zodResolver(referralCreateSchema),
+    defaultValues,
+    mode: "onSubmit",
+  });
 
   const provinceOptions = useMemo(() => {
     return (
-      provincesQuery.data?.content.map((province) => ({
+      provincesQuery.data?.content?.map((province) => ({
         label: province.fullName,
         value: province.fullName,
       })) ?? []
     );
   }, [provincesQuery.data?.content]);
 
-  const onSubmit = async () => {
-    const nextErrors = validate(formValues);
-    setFormErrors(nextErrors);
+  const onSubmit = async (values: ReferralCreateFormValues) => {
     setSubmitError("");
-    if (Object.keys(nextErrors).length > 0) return;
 
-    const normalizedPhone = normalizePhoneTo84(formValues.phone);
     try {
+      const normalizedPhone = normalizePhoneTo84(values.phone);
+
       await createReferrerMutation.mutateAsync({
         phoneNumber: normalizedPhone,
-        fullName: formValues.fullName.trim(),
-        province: formValues.province.trim(),
+        fullName: values.fullName.trim(),
+        province: values.province.trim(),
       });
+
       setLocation("/referrals");
     } catch (error) {
       console.error(error);
       setSubmitError("Không thể tạo người giới thiệu. Vui lòng thử lại.");
     }
-  };
-
-  const updateField = <K extends keyof ReferralFormValues>(
-    key: K,
-    value: ReferralFormValues[K],
-  ) => {
-    setFormValues((current) => ({ ...current, [key]: value }));
   };
 
   return (
@@ -96,7 +100,7 @@ export function ReferralCreatePage() {
             Quản trị hệ thống
           </div>
           <div className="space-y-2">
-            <h2 className="text-3xl font-semibold tracking-[-0.04em] text-slate-900 md:text-4xl">
+            <h2 className="text-2xl font-semibold leading-tight tracking-[-0.04em] text-slate-900 sm:text-3xl md:text-4xl">
               Tạo người giới thiệu
             </h2>
             <p className="max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
@@ -107,110 +111,142 @@ export function ReferralCreatePage() {
         </div>
 
         <div className="flex shrink-0 flex-wrap gap-2">
-          <Button variant="outline" onClick={() => setLocation("/referrals")}>
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => setLocation("/referrals")}
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="referral-name" required>
-            Họ và tên
-          </Label>
-          <Input
-            id="referral-name"
-            value={formValues.fullName}
-            onChange={(event) => updateField("fullName", event.target.value)}
-            placeholder="Nhập người giới thiệu"
-            aria-invalid={Boolean(formErrors.fullName)}
-          />
-          {formErrors.fullName ? (
-            <p className="text-sm text-rose-600">{formErrors.fullName}</p>
-          ) : null}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="referral-phone" required>
-            Số điện thoại
-          </Label>
-          <Input
-            id="referral-phone"
-            value={formValues.phone}
-            onChange={(event) => updateField("phone", event.target.value)}
-            placeholder="0901 234 567"
-            aria-invalid={Boolean(formErrors.phone)}
-          />
-          {formErrors.phone ? (
-            <p className="text-sm text-rose-600">{formErrors.phone}</p>
-          ) : null}
-        </div>
+      <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="referral-name" required>
+              Họ và tên
+            </Label>
+            <Controller
+              control={control}
+              name="fullName"
+              render={({ field }) => (
+                <Input
+                  id="referral-name"
+                  {...field}
+                  placeholder="Nhập người giới thiệu"
+                  aria-invalid={Boolean(errors.fullName)}
+                />
+              )}
+            />
+            {errors.fullName ? (
+              <p className="text-sm text-rose-600">{errors.fullName.message}</p>
+            ) : null}
+          </div>
 
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="referral-province" required>
-            Tỉnh
-          </Label>
-          <AutoCompleteSelect
-            value={formValues.province}
-            onChange={(value) => updateField("province", value)}
-            options={provinceOptions}
-            placeholder="Chọn tỉnh"
-            searchPlaceholder="Tìm theo tỉnh..."
-            emptyText="Không tìm thấy tỉnh"
-            clearable
-            autocomplete
-          />
-          {formErrors.province ? (
-            <p className="text-sm text-rose-600">{formErrors.province}</p>
-          ) : null}
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="referral-phone" required>
+              Số điện thoại
+            </Label>
+            <Controller
+              control={control}
+              name="phone"
+              render={({ field }) => (
+                <Input
+                  id="referral-phone"
+                  {...field}
+                  placeholder="0901 234 567"
+                  aria-invalid={Boolean(errors.phone)}
+                />
+              )}
+            />
+            {errors.phone ? (
+              <p className="text-sm text-rose-600">{errors.phone.message}</p>
+            ) : null}
+          </div>
 
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="referral-status" required>
-            Trạng thái
-          </Label>
-          <Select
-            value={formValues.status}
-            onValueChange={(value) =>
-              updateField("status", value as ReferralFormValues["status"])
-            }
-          >
-            <SelectTrigger
-              id="referral-status"
-              aria-invalid={Boolean(formErrors.status)}
-            >
-              <SelectValue placeholder="Chọn trạng thái" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Hoạt động">Hoạt động</SelectItem>
-              <SelectItem value="Khoá">Khoá</SelectItem>
-            </SelectContent>
-          </Select>
-          {formErrors.status ? (
-            <p className="text-sm text-rose-600">{formErrors.status}</p>
-          ) : null}
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="referral-province" required>
+              Tỉnh
+            </Label>
+            <Controller
+              control={control}
+              name="province"
+              render={({ field }) => (
+                <AutoCompleteSelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={provinceOptions}
+                  placeholder="Chọn tỉnh"
+                  searchPlaceholder="Tìm theo tỉnh..."
+                  emptyText="Không tìm thấy tỉnh"
+                  clearable
+                  autocomplete
+                />
+              )}
+            />
+            {errors.province ? (
+              <p className="text-sm text-rose-600">{errors.province.message}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="referral-status" required>
+              Trạng thái
+            </Label>
+            <Controller
+              control={control}
+              name="status"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger
+                    id="referral-status"
+                    aria-invalid={Boolean(errors.status)}
+                  >
+                    <SelectValue placeholder="Chọn trạng thái" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Hoạt động">Hoạt động</SelectItem>
+                    <SelectItem value="Khoá">Khoá</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.status ? (
+              <p className="text-sm text-rose-600">{errors.status.message}</p>
+            ) : null}
+          </div>
         </div>
-      </div>
 
       <div className="flex flex-wrap justify-end gap-2 border-t border-black/5 pt-4">
         {submitError ? (
           <p className="mr-auto text-sm text-rose-600">{submitError}</p>
         ) : null}
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => setLocation("/referrals")}
+          >
+            Hủy
+          </Button>
         <Button
-          variant="outline"
-          type="button"
-          onClick={() => setLocation("/referrals")}
+          type="submit"
+          disabled={
+            !isDirty || createReferrerMutation.isPending || isSubmitting
+          }
         >
-          Hủy
-        </Button>
-        <Button
-          type="button"
-          disabled={createReferrerMutation.isPending}
-          onClick={onSubmit}
-        >
-          Tạo thông tin
+          {createReferrerMutation.isPending || isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Đang tạo...
+            </>
+          ) : (
+            "Tạo thông tin"
+          )}
         </Button>
       </div>
-    </section>
+    </form>
+  </section>
   );
 }

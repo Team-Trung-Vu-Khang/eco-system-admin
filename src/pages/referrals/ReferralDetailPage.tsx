@@ -26,6 +26,7 @@ import {
   type ReferralRow,
 } from "./data/referrals";
 import { useReferralsStore } from "./hooks/useReferralsStore";
+import { getFeatureDuplicateMessage } from "@/constants/message.constant";
 
 function validate(values: ReferralFormValues) {
   const errors: ReferralFormErrors = {};
@@ -124,8 +125,7 @@ function ReferralDetailPageContent({
 
     if (duplicate) {
       setFormErrors({
-        phone:
-          "Số điện thoại này đã tồn tại. Hãy kiểm tra bản ghi cũ trước khi lưu.",
+        phone: getFeatureDuplicateMessage("referrers"),
       });
       return;
     }

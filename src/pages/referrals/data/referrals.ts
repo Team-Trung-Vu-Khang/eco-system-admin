@@ -1,4 +1,6 @@
+import * as XLSX from "xlsx"
 import type { ReferrerListItem } from "@/api/referrers/referrers.response"
+import { getFeatureDuplicateMessage } from "@/constants/message.constant"
 
 export type ReferralStatus = 'Hoạt động' | 'Khoá'
 
@@ -44,6 +46,7 @@ export const referralStatusOptions = [
 ]
 
 export const referralStorageKey = 'eco-system-admin-referrals'
+export const referralTemplateFileName = 'mau_danh_sach_nguoi_gioi_thieu.xlsx'
 
 export const seedReferrals: ReferralRow[] = [
   {
@@ -182,7 +185,7 @@ export function reviewReferralUploadText(
     }
 
     if (phone && seenPhonesInFile.has(phone)) {
-      reasons.push('Số điện thoại bị trùng trong tệp')
+      reasons.push(`${getFeatureDuplicateMessage('referrers')} trong tệp`)
     }
 
     const valid = reasons.length === 0
@@ -218,6 +221,42 @@ export function reviewReferralUploadText(
 
 export function parseReferralUploadText(text: string) {
   return reviewReferralUploadText(text).validValues
+}
+
+export function buildReferralTemplateWorkbook() {
+  const worksheet = XLSX.utils.aoa_to_sheet([
+    ["Số điện thoại", "Họ và tên", "Tỉnh"],
+    ["09012345678", "Nguyễn Văn A", "Hà Nội"],
+  ])
+
+  worksheet["!cols"] = [
+    { wch: 18.13 },
+    { wch: 18.88 },
+    { wch: 17.88 },
+  ]
+
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Trang tính1")
+
+  return workbook
+}
+
+export async function parseReferralUploadFile(file: File) {
+  const isExcelFile = /\.(xlsx|xls)$/i.test(file.name)
+
+  if (!isExcelFile) {
+    return file.text()
+  }
+
+  const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" })
+  const firstSheetName = workbook.SheetNames[0]
+
+  if (!firstSheetName) {
+    return ""
+  }
+
+  const worksheet = workbook.Sheets[firstSheetName]
+  return XLSX.utils.sheet_to_csv(worksheet)
 }
 
 function pad2(value: number) {

@@ -10,15 +10,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@Team-Trung-Vu-Khang/eco-shared-ui": "^0.0.6-beta.51",
     "@hookform/resolvers": "^5.5.7",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query": "^5.101.4",
+    "@Team-Trung-Vu-Khang/eco-shared-ui": "^0.0.6-beta.51",
     "lucide-react": "^1.28.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-hook-form": "^7.84.0",
     "react-is": "^19.2.8",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "xlsx": "^0.18.5",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",

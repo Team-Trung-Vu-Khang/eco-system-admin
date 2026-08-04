@@ -12,6 +12,7 @@ import {
   Label,
   type Column,
 } from "@Team-Trung-Vu-Khang/eco-shared-ui";
+import { parseReferralUploadFile } from "../data/referrals";
 import type { BulkUploadReferrerJobResponse } from "@/api/referrers/referrers.response";
 import type { ReferralUploadReview } from "../data/referrals";
 
@@ -182,16 +183,16 @@ export function ReferralUploadDialog({
                 {uploadFileName || "Chưa có tệp nào được chọn"}
               </span>
             </div>
-              <input
+            <input
               ref={fileInputRef}
               type="file"
-              accept=".csv,.txt"
+              accept=".xlsx,.xls,.csv,.txt"
               className="hidden"
               onChange={async (event) => {
                 const file = event.target.files?.[0];
                 if (!file) return;
 
-                const text = await file.text();
+                const text = await parseReferralUploadFile(file);
                 onFileLoaded(text, file.name, file);
               }}
             />
