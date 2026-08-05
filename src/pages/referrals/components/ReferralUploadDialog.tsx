@@ -245,17 +245,38 @@ export function ReferralUploadDialog({
                 <Badge variant="secondary">{jobStatusLabel}</Badge>
               </div>
               <div className="mt-3 space-y-3">
-                <div className="mt-2 space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span>{progressLabel}</span>
-                    <span className="font-medium">
-                      {uploadJob.result ? "100%" : `${progressValue}%`}
-                    </span>
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
+                    Kết quả
                   </div>
-                  <Progress
-                    value={progressValue}
-                    className="h-2 rounded-full bg-sky-100"
-                  />
+                  <div className="mt-1 text-sm">
+                    {uploadResultCounts
+                      ? [
+                          `Tạo mới: ${uploadResultCounts.created}`,
+                          `Nâng cấp: ${uploadResultCounts.promoted}`,
+                          `Bỏ qua trùng: ${uploadResultCounts.skippedDuplicates}`,
+                          `Lỗi: ${uploadResultCounts.failed}`,
+                        ].join(" · ")
+                      : "Đang xử lý..."}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
+                    Tiến độ
+                  </div>
+                  <div className="mt-2 space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>{progressLabel}</span>
+                      <span className="font-medium">
+                        {uploadJob.result ? "100%" : `${progressValue}%`}
+                      </span>
+                    </div>
+                    <Progress
+                      value={progressValue}
+                      className="h-2 rounded-full bg-sky-100"
+                    />
+                  </div>
                 </div>
               </div>
               {uploadJob.result?.errors.length ? (
