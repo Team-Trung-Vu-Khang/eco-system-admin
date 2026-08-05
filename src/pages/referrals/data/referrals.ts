@@ -310,7 +310,7 @@ export function normalizeReferralStatus(value: string): ReferralStatus {
 export function mapReferrerToReferralRow(item: ReferrerListItem): ReferralRow {
   return {
     id: String(item.id),
-    phone: item.username,
+    phone: item.phoneNumber ?? "",
     fullName: item.fullName,
     province: item?.province || "",
     commune: item?.commune || "",

@@ -12,14 +12,15 @@ export type CreateReferrerRequest = {
 };
 
 export type UpdateReferrerRequest = {
+  phoneNumber: string;
   fullName: string;
   province: string;
   commune: string;
 };
 
 export type UpdateReferrerStatusRequest = {
-  userId: number;
-  isReferrer: boolean;
+  referrerId: number;
+  active: boolean;
 };
 
 export type BulkUploadReferrersRequest = {

@@ -97,9 +97,9 @@ function normalizePhoneSearch(value?: string) {
   return value?.replace(/\D/g, "") ?? "";
 }
 
-function buildReferrerLabel(fullName?: string, username?: string) {
+function buildReferrerLabel(fullName?: string, phoneNumber?: string) {
   const name = fullName?.trim() ?? "";
-  const account = username?.trim() ?? "";
+  const account = phoneNumber?.trim() ?? "";
 
   return [name, account].filter(Boolean).join(" - ");
 }
@@ -189,14 +189,13 @@ export function UserAccountForm({
 
   const referrerPhoneOptions = useMemo<AutoCompleteOption[]>(() => {
     return (referrersQuery.data?.content ?? []).flatMap((item) => {
-      const username = item.username?.trim() ?? "";
-      const phoneNumber = username || item.phoneNumber?.trim() || "";
+      const phoneNumber = item.phoneNumber?.trim() ?? "";
 
       if (!phoneNumber) {
         return [];
       }
 
-      const label = buildReferrerLabel(item.fullName, username || phoneNumber);
+      const label = buildReferrerLabel(item.fullName, phoneNumber);
       const fullNameTokens =
         item.fullName?.trim().toLowerCase().split(/\s+/).filter(Boolean) ?? [];
       const phoneDigits = normalizePhoneSearch(phoneNumber);
@@ -207,9 +206,10 @@ export function UserAccountForm({
         keywords: [
           toSearchableText(item.fullName),
           ...fullNameTokens,
-          toSearchableText(item.username),
-          toSearchableText(item.email),
-          toSearchableText(item.code),
+          toSearchableText(item.phoneNumber),
+          toSearchableText(item.province),
+          toSearchableText(item.commune),
+          toSearchableText(item.status),
           phoneNumber.toLowerCase(),
           phoneDigits,
         ].filter(Boolean),

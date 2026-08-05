@@ -9,11 +9,6 @@ import {
   AutoCompleteSelect,
   Input,
   Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   useToast,
 } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import { useCreateReferrerMutation } from "@/api/referrers/referrers.hooks";
@@ -32,9 +27,6 @@ const referralCreateSchema = z.object({
   }),
   province: z.string().trim().min(1, "Vui lòng chọn nhập tỉnh"),
   commune: z.string().trim().min(1, "Vui lòng nhập xã/phường"),
-  status: z.enum(["Hoạt động", "Khoá"], {
-    message: "Vui lòng chọn trạng thái",
-  }),
 });
 
 type ReferralCreateFormValues = z.infer<typeof referralCreateSchema>;
@@ -44,7 +36,6 @@ const defaultValues: ReferralCreateFormValues = {
   phone: "",
   province: "",
   commune: "",
-  status: "Hoạt động",
 };
 
 export function ReferralCreatePage() {
@@ -269,32 +260,6 @@ export function ReferralCreatePage() {
             ) : null}
           </div>
 
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="referral-status" required>
-              Trạng thái
-            </Label>
-            <Controller
-              control={control}
-              name="status"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger
-                    id="referral-status"
-                    aria-invalid={Boolean(errors.status)}
-                  >
-                    <SelectValue placeholder="Chọn trạng thái" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Hoạt động">Hoạt động</SelectItem>
-                    <SelectItem value="Khoá">Khoá</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {errors.status ? (
-              <p className="text-sm text-rose-600">{errors.status.message}</p>
-            ) : null}
-          </div>
         </div>
 
         <div className="flex flex-wrap justify-end gap-2 border-t border-black/5 pt-4">

@@ -1,17 +1,10 @@
 export type ReferrerListItem = {
   id: number;
-  code: string;
-  username: string;
-  email: string;
   fullName: string;
   phoneNumber?: string;
-  operatingArea: string;
   province?: string;
   commune?: string;
-  birthYear: number;
-  roleCodes: string[];
   status: string;
-  mustChangePassword: boolean;
   createdAt: string;
 };
 
@@ -29,8 +22,8 @@ export type CreateReferrerResponse = ReferrerListItem;
 export type UpdateReferrerResponse = ReferrerListItem;
 
 export type UpdateReferrerStatusResponse = {
-  userId: number;
-  isReferrer: boolean;
+  referrerId: number;
+  active: boolean;
 };
 
 export type BulkUploadReferrersResponse = {

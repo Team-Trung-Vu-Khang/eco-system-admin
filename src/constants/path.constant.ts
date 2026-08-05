@@ -9,9 +9,9 @@ export const PATH = {
   REFERRERS: {
     LIST: "/api/admin/referrers",
     CREATE: "/api/admin/referrers",
-    UPDATE: (userId: number | string) => `/api/admin/referrers/${userId}`,
-    UPDATE_STATUS: (userId: number | string) =>
-      `/api/admin/referrers/${userId}/status`,
+    UPDATE: (referrerId: number | string) => `/api/admin/referrers/${referrerId}`,
+    UPDATE_STATUS: (referrerId: number | string) =>
+      `/api/admin/referrers/${referrerId}/status`,
     BULK_UPLOAD: "/api/admin/referrers/bulk-upload",
     BULK_UPLOAD_JOB: (jobExecutionId: number | string) =>
       `/api/admin/referrers/bulk-upload/${jobExecutionId}`,

@@ -16,10 +16,8 @@ import type { UpdateReferrerStatusResponse } from "./referrers.response";
 function buildReferrerListParams(
   query: GetReferrersRequest = {},
 ): ApiQueryParams {
-  const keyword = query.keyword?.trim() ?? "";
-
   return {
-    keyword,
+    keyword: query.keyword?.trim() || undefined,
     page: query.page,
     size: query.size,
   };
@@ -38,18 +36,21 @@ export async function createReferrer(
 }
 
 export async function updateReferrer(
-  userId: number | string,
+  referrerId: number | string,
   body: UpdateReferrerRequest,
 ): Promise<UpdateReferrerResponse> {
-  return apiClient.put<UpdateReferrerResponse>(PATH.REFERRERS.UPDATE(userId), body);
+  return apiClient.put<UpdateReferrerResponse>(
+    PATH.REFERRERS.UPDATE(referrerId),
+    body,
+  );
 }
 
 export async function updateReferrerStatus(
   body: UpdateReferrerStatusRequest,
 ): Promise<UpdateReferrerStatusResponse> {
-  const { userId, ...payload } = body;
+  const { referrerId, ...payload } = body;
   return apiClient.request<UpdateReferrerStatusResponse>(
-    PATH.REFERRERS.UPDATE_STATUS(userId),
+    PATH.REFERRERS.UPDATE_STATUS(referrerId),
     {
       method: "PUT",
       body: payload,

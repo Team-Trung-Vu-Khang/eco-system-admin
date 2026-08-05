@@ -18,9 +18,7 @@ type ReferralEditDialogProps = {
   onOpenChange: (open: boolean) => void;
   referral: ReferralRow | null;
   loading: boolean;
-  onSubmit: (
-    values: Omit<ReferralEditFormValues, "phone">,
-  ) => void | Promise<void>;
+  onSubmit: (values: ReferralEditFormValues) => void | Promise<void>;
 };
 
 function buildInitialValues(
@@ -36,6 +34,10 @@ function buildInitialValues(
 
 function validate(values: ReferralEditFormValues) {
   const errors: ReferralEditFormErrors = {};
+
+  if (!values.phone.trim()) {
+    errors.phone = "Vui lòng nhập số điện thoại";
+  }
 
   if (!values.fullName.trim()) {
     errors.fullName = "Vui lòng nhập tên";
@@ -76,7 +78,7 @@ export function ReferralEditDialog({
     : "Cập nhật người giới thiệu";
 
   const description = referral
-    ? "Số điện thoại được khóa để tránh thay đổi ngoài ý muốn. Chỉ cập nhật thông tin còn lại."
+    ? "Cập nhật số điện thoại, tên, tỉnh và xã/phường của người giới thiệu."
     : "Chọn một bản ghi để chỉnh sửa.";
 
   return (
@@ -96,6 +98,7 @@ export function ReferralEditDialog({
         }
 
         await onSubmit({
+          phone: formValues.phone.trim(),
           fullName: formValues.fullName.trim(),
           province: formValues.province.trim(),
           commune: formValues.commune.trim(),
@@ -110,9 +113,18 @@ export function ReferralEditDialog({
           <Input
             id="referral-phone"
             value={formValues.phone}
-            disabled
-            readOnly
+            onChange={(event) =>
+              setFormValues((current) => ({
+                ...current,
+                phone: event.target.value,
+              }))
+            }
+            placeholder="Nhập số điện thoại"
+            aria-invalid={Boolean(formErrors.phone)}
           />
+          {formErrors.phone ? (
+            <p className="text-sm text-rose-600">{formErrors.phone}</p>
+          ) : null}
         </div>
 
         <div className="space-y-2">

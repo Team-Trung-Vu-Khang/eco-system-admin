@@ -41,10 +41,10 @@ export function useUpdateReferrerMutation() {
   return useMutation({
     mutationKey: QUERY_KEY.REFERRERS.UPDATE,
     mutationFn: ({
-      userId,
+      referrerId,
       ...body
-    }: UpdateReferrerRequest & { userId: number | string }) =>
-      updateReferrer(userId, body),
+    }: UpdateReferrerRequest & { referrerId: number | string }) =>
+      updateReferrer(referrerId, body),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEY.REFERRERS.LIST,

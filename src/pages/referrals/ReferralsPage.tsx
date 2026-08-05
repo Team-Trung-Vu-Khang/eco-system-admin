@@ -206,8 +206,11 @@ export function ReferralsPage() {
 
           try {
             await updateReferrerMutation.mutateAsync({
-              userId: Number(selectedReferral.id),
-              ...values,
+              referrerId: Number(selectedReferral.id),
+              phoneNumber: values.phone,
+              fullName: values.fullName,
+              province: values.province,
+              commune: values.commune,
             });
 
             toast({
