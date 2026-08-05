@@ -2,11 +2,16 @@ import { apiClient } from "@/api/apiClient";
 import { PATH } from "@/constants/path.constant";
 import type { AssignUserRoleRequest } from "./users.request";
 import type { AdminCreateUserRequest } from "./users.request";
+import type { UpdateUserRequest } from "./users.request";
+import type { UpdateUserStatusRequest } from "./users.request";
 import type { ResetDefaultPasswordRequest } from "./users.request";
 import type { RevokeUserRoleRequest } from "./users.request";
 import type { SetUserReferrerRequest } from "./users.request";
 import type { AssignUserRoleResponse } from "./users.response";
 import type { AdminCreateUserResponse } from "./users.response";
+import type { UserDetailResponse } from "./users.response";
+import type { UpdateUserResponse } from "./users.response";
+import type { UpdateUserStatusResponse } from "./users.response";
 import type { ResetDefaultPasswordResponse } from "./users.response";
 import type { RevokeUserRoleResponse } from "./users.response";
 import type { SetUserReferrerResponse } from "./users.response";
@@ -23,6 +28,30 @@ export async function getUsers(query: GetUsersRequest = {}) {
 
 export async function createUser(body: AdminCreateUserRequest) {
   return apiClient.post<AdminCreateUserResponse>(PATH.USERS.CREATE, body);
+}
+
+export async function getUserDetail(
+  userId: number | string,
+): Promise<UserDetailResponse> {
+  return apiClient.get<UserDetailResponse>(PATH.USERS.DETAIL(userId));
+}
+
+export async function updateUser(
+  userId: number | string,
+  body: UpdateUserRequest,
+): Promise<UpdateUserResponse> {
+  return apiClient.put<UpdateUserResponse>(PATH.USERS.DETAIL(userId), body);
+}
+
+export async function updateUserStatus(
+  body: UpdateUserStatusRequest,
+): Promise<UpdateUserStatusResponse> {
+  const { userId, ...payload } = body;
+
+  return apiClient.request<UpdateUserStatusResponse>(PATH.USERS.UPDATE_STATUS(userId), {
+    method: "PUT",
+    body: payload,
+  });
 }
 
 export async function assignUserRole(

@@ -39,6 +39,15 @@ export type AdminCreateUserRequest = {
   audienceType: AdminUserAudienceType;
 };
 
+export type UpdateUserRequest = {
+  operatingArea: string;
+};
+
+export type UpdateUserStatusRequest = {
+  userId: number | string;
+  status: "active" | "inactive";
+};
+
 export type ResetDefaultPasswordRequest = {
   userId: number | string;
 };

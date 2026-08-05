@@ -92,7 +92,7 @@ export default function UsersPage() {
         columns={userColumns}
         data={users}
         searchable
-        // onEdit={(item) => setLocation(`/users/${item.id}/edit`)}
+        onEdit={(item) => setLocation(`/users/${item.id}/edit`)}
         searchPlaceholder="Tìm kiếm theo mã, tên, email, tên đăng nhập..."
         filters={filters}
         onFilterChange={handleFilterChange}

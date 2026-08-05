@@ -12,7 +12,10 @@ export const QUERY_KEY = {
   },
   USERS: {
     LIST: ["users", "list"] as const,
+    DETAIL: ["users", "detail"] as const,
     CREATE: ["users", "create"] as const,
+    UPDATE: ["users", "update"] as const,
+    UPDATE_STATUS: ["users", "update-status"] as const,
     ASSIGN_ROLE: ["users", "assign-role"] as const,
     WORKSPACES: ["users", "workspaces"] as const,
     REVOKE_ROLE: ["users", "revoke-role"] as const,

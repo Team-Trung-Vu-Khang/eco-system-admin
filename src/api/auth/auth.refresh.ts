@@ -1,5 +1,4 @@
-import axios from "axios";
-import { API_BASE_URL } from "@/constants/api.constant";
+import { apiClient } from "../apiClient";
 import { PATH } from "@/constants/path.constant";
 import { authStorage } from "./auth.storage";
 
@@ -12,16 +11,11 @@ export async function refreshAccessToken() {
     throw new Error("Missing auth token");
   }
 
-  const { data } = await axios.post<RefreshTokenResponse>(
-    PATH.AUTH.REFRESH,
-    null,
-    {
-      baseURL: API_BASE_URL,
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+  const data = await apiClient.post<RefreshTokenResponse>(PATH.AUTH.REFRESH, null, {
+    headers: {
+      Authorization: `Bearer ${token}`,
     },
-  );
+  });
 
   const nextToken =
     typeof data === "string" ? data : data.access_token ?? data.token;

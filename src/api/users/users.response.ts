@@ -12,6 +12,12 @@ export type UserItem = {
   createdAt: string;
 };
 
+export type UserDetailResponse = UserItem & {
+  phoneNumber?: string;
+  province: string;
+  commune: string;
+};
+
 export type UserListResponse = {
   content: UserItem[];
   page: number;
@@ -23,6 +29,11 @@ export type UserListResponse = {
 };
 
 export type AdminCreateUserResponse = UserItem;
+export type UpdateUserResponse = UserDetailResponse;
+export type UpdateUserStatusResponse = {
+  userId: number;
+  status: "active" | "inactive";
+};
 
 export type ResetDefaultPasswordResponse = {
   messageKey: string;

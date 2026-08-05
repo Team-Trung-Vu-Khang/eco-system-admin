@@ -4,9 +4,12 @@ import {
   assignUserRole,
   createUser,
   getUsers,
+  getUserDetail,
   getUserWorkspaces,
   resetDefaultPassword,
   revokeUserRole,
+  updateUser,
+  updateUserStatus,
   setUserReferrer,
 } from "./users.api";
 import type {
@@ -16,12 +19,28 @@ import type {
   ResetDefaultPasswordRequest,
   RevokeUserRoleRequest,
   SetUserReferrerRequest,
+  UpdateUserRequest,
+  UpdateUserStatusRequest,
 } from "./users.request";
 
 export function useUsersQuery(query: GetUsersRequest = {}) {
   return useQuery({
     queryKey: [...QUERY_KEY.USERS.LIST, query] as const,
     queryFn: async () => getUsers(query),
+  });
+}
+
+export function useUserQuery(userId: number | string | null) {
+  return useQuery({
+    queryKey: userId ? [...QUERY_KEY.USERS.DETAIL, userId] as const : QUERY_KEY.USERS.DETAIL,
+    queryFn: async () => {
+      if (userId === null) {
+        throw new Error("Missing user id");
+      }
+
+      return getUserDetail(userId);
+    },
+    enabled: userId !== null,
   });
 }
 
@@ -35,6 +54,45 @@ export function useAssignUserRoleMutation() {
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEY.USERS.LIST,
       });
+    },
+  });
+}
+
+export function useUpdateUserMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: QUERY_KEY.USERS.UPDATE,
+    mutationFn: ({ userId, ...body }: UpdateUserRequest & { userId: number | string }) =>
+      updateUser(userId, body),
+    onSuccess: async (_, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEY.USERS.LIST,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [...QUERY_KEY.USERS.DETAIL, variables.userId],
+        }),
+      ]);
+    },
+  });
+}
+
+export function useUpdateUserStatusMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: QUERY_KEY.USERS.UPDATE_STATUS,
+    mutationFn: (body: UpdateUserStatusRequest) => updateUserStatus(body),
+    onSuccess: async (_, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEY.USERS.LIST,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [...QUERY_KEY.USERS.DETAIL, variables.userId],
+        }),
+      ]);
     },
   });
 }

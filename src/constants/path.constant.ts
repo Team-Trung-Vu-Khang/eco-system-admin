@@ -18,6 +18,8 @@ export const PATH = {
   USERS: {
     LIST: "/api/admin/users",
     CREATE: "/api/admin/users",
+    DETAIL: (userId: number | string) => `/api/admin/users/${userId}`,
+    UPDATE_STATUS: (userId: number | string) => `/api/admin/users/${userId}/status`,
     ASSIGN_ROLE: (userId: number | string) => `/api/admin/users/${userId}/roles`,
     WORKSPACES: (userId: number | string) => `/api/admin/users/${userId}/workspaces`,
     REVOKE_ROLE: (userId: number | string, roleId: number | string) =>
