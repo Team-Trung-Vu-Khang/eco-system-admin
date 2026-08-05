@@ -82,7 +82,8 @@ export function ReferralUploadDialog({
     { key: "lineNumber", label: "Dòng", width: "80px" },
     { key: "phone", label: "Số điện thoại", width: "150px" },
     { key: "fullName", label: "Tên", width: "180px" },
-    { key: "province", label: "Tỉnh", width: "180px" },
+    { key: "province", label: "Tỉnh/Thành phố", width: "180px" },
+    { key: "commune", label: "Xã/Phường", width: "180px" },
     {
       key: "action",
       label: "Kết quả",
@@ -142,7 +143,8 @@ export function ReferralUploadDialog({
                 </p>
                 <ul className="list-disc space-y-1 pl-5 text-sm leading-6 text-slate-600">
                   <li>
-                    Tải file mẫu để nhập đúng 3 cột: số điện thoại, tên, tỉnh.
+                    Tải file mẫu để nhập đúng 4 cột: số điện thoại, họ và tên,
+                    tỉnh/thành phố, xã/phường.
                   </li>
                   <li>Số điện thoại sẽ tự động quy về đầu 84.</li>
                   <li>

@@ -39,6 +39,7 @@ function validate(values: ReferralFormValues) {
 
   if (!values.fullName.trim()) errors.fullName = "Vui lòng nhập tên";
   if (!values.province.trim()) errors.province = "Vui lòng nhập tỉnh";
+  if (!values.commune.trim()) errors.commune = "Vui lòng nhập xã/phường";
   if (!values.status.trim()) errors.status = "Vui lòng chọn trạng thái";
 
   return errors;
@@ -68,6 +69,7 @@ function ReferralDetailPageContent({
     phone: referral.phone,
     fullName: referral.fullName,
     province: referral.province,
+    commune: referral.commune ?? "",
     status: referral.status,
   }));
   const [formErrors, setFormErrors] = useState<ReferralFormErrors>({});
@@ -230,6 +232,22 @@ function ReferralDetailPageContent({
               />
               {formErrors.province ? (
                 <p className="text-sm text-rose-600">{formErrors.province}</p>
+              ) : null}
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="referral-commune" required>
+                Xã/Phường
+              </Label>
+              <Input
+                id="referral-commune"
+                value={formValues.commune}
+                onChange={(event) => updateField("commune", event.target.value)}
+                placeholder="Nhập xã/phường"
+                aria-invalid={Boolean(formErrors.commune)}
+              />
+              {formErrors.commune ? (
+                <p className="text-sm text-rose-600">{formErrors.commune}</p>
               ) : null}
             </div>
 

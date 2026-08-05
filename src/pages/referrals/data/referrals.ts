@@ -18,7 +18,7 @@ export type ReferralFormValues = {
   phone: string;
   fullName: string;
   province: string;
-  commune?: string;
+  commune: string;
   status: ReferralStatus;
 };
 
@@ -32,6 +32,7 @@ export type ReferralUploadReviewRow = {
   phone: string;
   fullName: string;
   province: string;
+  commune: string;
   action: "Thêm mới" | "Cập nhật" | "Lỗi";
   valid: boolean;
   reasons: string[];
@@ -130,7 +131,12 @@ function isUploadHeader(columns: string[]) {
     header.includes("ten") ||
     header.includes("tên") ||
     header.includes("tinh") ||
-    header.includes("tỉnh")
+    header.includes("tỉnh") ||
+    header.includes("thành phố") ||
+    header.includes("xa") ||
+    header.includes("xã") ||
+    header.includes("phuong") ||
+    header.includes("phường")
   );
 }
 
@@ -160,8 +166,7 @@ export function reviewReferralUploadText(
   for (const [index, row] of rows.entries()) {
     const columns = row
       .split(/[,\t;|]/)
-      .map((cell) => cell.trim())
-      .filter(Boolean);
+      .map((cell) => cell.trim());
 
     if (index === 0 && isUploadHeader(columns)) {
       continue;
@@ -171,11 +176,14 @@ export function reviewReferralUploadText(
     const rawPhone = columns[0] ?? "";
     const fullName = columns[1] ?? "";
     const province = columns[2] ?? "";
+    const commune = columns[3] ?? "";
     const phone = normalizePhoneTo84(rawPhone);
     const isExisting = phone ? existingPhoneSet.has(phone) : false;
 
-    if (columns.length < 3) {
-      reasons.push("Thiếu đủ 3 cột: số điện thoại, tên, tỉnh");
+    if (columns.length < 4) {
+      reasons.push(
+        "Thiếu đủ 4 cột: số điện thoại, họ và tên, tỉnh/thành phố, xã/phường",
+      );
     }
 
     if (!rawPhone.trim()) {
@@ -189,7 +197,11 @@ export function reviewReferralUploadText(
     }
 
     if (!province.trim()) {
-      reasons.push("Thiếu tỉnh");
+      reasons.push("Thiếu tỉnh/thành phố");
+    }
+
+    if (!commune.trim()) {
+      reasons.push("Thiếu xã/phường");
     }
 
     if (phone && seenPhonesInFile.has(phone)) {
@@ -203,6 +215,7 @@ export function reviewReferralUploadText(
         phone,
         fullName: fullName.trim(),
         province: province.trim(),
+        commune: commune.trim(),
         status: "Hoạt động",
       });
     }
@@ -213,6 +226,7 @@ export function reviewReferralUploadText(
       phone,
       fullName: fullName.trim(),
       province: province.trim(),
+      commune: commune.trim(),
       action: valid ? (isExisting ? "Cập nhật" : "Thêm mới") : "Lỗi",
       valid,
       reasons,
@@ -233,14 +247,14 @@ export function parseReferralUploadText(text: string) {
 
 export function buildReferralTemplateWorkbook() {
   const worksheet = XLSX.utils.aoa_to_sheet([
-    ["Số điện thoại", "Họ và tên", "Tỉnh", "Xã/phường"],
+    ["Số điện thoại", "Họ và tên", "Tỉnh/Thành phố", "Xã/Phường"],
     ["09012345678", "Nguyễn Văn A", "Hà Nội", "Ba Đình"],
   ]);
 
   worksheet["!cols"] = [
     { wch: 18.13 },
     { wch: 18.88 },
-    { wch: 17.88 },
+    { wch: 20.88 },
     { wch: 17.88 },
   ];
 

@@ -7,7 +7,6 @@ import {
 } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import * as XLSX from "xlsx";
 import { useToast } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import { QUERY_KEY } from "@/constants/query-key.constant";
 import {
@@ -18,7 +17,6 @@ import {
 } from "@/api/referrers/referrers.hooks";
 import {
   type ReferralUploadReview,
-  buildReferralTemplateWorkbook,
   mapReferrerToReferralRow,
   referralTemplateFileName,
   reviewReferralUploadText,
@@ -112,23 +110,12 @@ export function ReferralsPage() {
   };
 
   const downloadReferralTemplate = () => {
-    const workbook = buildReferralTemplateWorkbook();
-    const binary = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-
-    const blob = new Blob([binary], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.href = url;
+    link.href = `/${referralTemplateFileName}`;
     link.download = referralTemplateFileName;
     document.body.appendChild(link);
     link.click();
     link.remove();
-    window.URL.revokeObjectURL(url);
   };
 
   const resetUploadDialog = () => {
