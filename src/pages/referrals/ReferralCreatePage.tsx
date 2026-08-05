@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,6 +18,7 @@ import {
 } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import { useCreateReferrerMutation } from "@/api/referrers/referrers.hooks";
 import { useProvincesQuery } from "@/api/provinces/provinces.hooks";
+import { useWardsQuery } from "@/api/wards/wards.hooks";
 import { normalizePhoneTo84 } from "./data/referrals";
 
 const referralCreateSchema = z.object({
@@ -28,8 +29,9 @@ const referralCreateSchema = z.object({
     .min(1, "Vui lòng nhập số điện thoại")
     .refine((value) => normalizePhoneTo84(value).startsWith("84"), {
       message: "Số điện thoại phải quy về đầu 84",
-    }),
+  }),
   province: z.string().trim().min(1, "Vui lòng chọn nhập tỉnh"),
+  commune: z.string().trim().min(1, "Vui lòng nhập xã/phường"),
   status: z.enum(["Hoạt động", "Khoá"], {
     message: "Vui lòng chọn trạng thái",
   }),
@@ -41,6 +43,7 @@ const defaultValues: ReferralCreateFormValues = {
   fullName: "",
   phone: "",
   province: "",
+  commune: "",
   status: "Hoạt động",
 };
 
@@ -57,12 +60,16 @@ export function ReferralCreatePage() {
   const {
     control,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ReferralCreateFormValues>({
     resolver: zodResolver(referralCreateSchema),
     defaultValues,
     mode: "onSubmit",
   });
+
+  const selectedProvince = watch("province");
 
   const provinceOptions = useMemo(() => {
     return (
@@ -73,6 +80,33 @@ export function ReferralCreatePage() {
     );
   }, [provincesQuery.data?.content]);
 
+  const selectedProvinceCode = useMemo(() => {
+    return (
+      provincesQuery.data?.content?.find(
+        (province) => province.fullName === selectedProvince,
+      )?.code ?? ""
+    );
+  }, [provincesQuery.data?.content, selectedProvince]);
+
+  const wardsQuery = useWardsQuery({
+    provinceCode: selectedProvinceCode,
+    page: 0,
+    size: 100,
+  });
+
+  const communeOptions = useMemo(() => {
+    return (
+      wardsQuery.data?.content?.map((ward) => ({
+        label: ward.fullName,
+        value: ward.fullName,
+      })) ?? []
+    );
+  }, [wardsQuery.data?.content]);
+
+  useEffect(() => {
+    setValue("commune", "");
+  }, [selectedProvinceCode, setValue]);
+
   const onSubmit = async (values: ReferralCreateFormValues) => {
     const normalizedPhone = normalizePhoneTo84(values.phone);
 
@@ -81,6 +115,7 @@ export function ReferralCreatePage() {
         phoneNumber: normalizedPhone,
         fullName: values.fullName,
         province: values.province,
+        commune: values.commune,
       },
       {
         onSuccess: () => {
@@ -117,8 +152,8 @@ export function ReferralCreatePage() {
               Tạo người giới thiệu
             </h2>
             <p className="max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
-              Nhập số điện thoại, tên và tỉnh. Số điện thoại sẽ tự động chuẩn
-              hóa về đầu 84.
+              Nhập số điện thoại, tên, tỉnh và xã/phường. Số điện thoại sẽ tự
+              động chuẩn hóa về đầu 84.
             </p>
           </div>
         </div>
@@ -201,6 +236,36 @@ export function ReferralCreatePage() {
             />
             {errors.province ? (
               <p className="text-sm text-rose-600">{errors.province.message}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="referral-commune" required>
+              Xã/phường
+            </Label>
+            <Controller
+              control={control}
+              name="commune"
+              render={({ field }) => (
+                <AutoCompleteSelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={communeOptions}
+                  placeholder={
+                    selectedProvinceCode
+                      ? "Chọn xã/phường"
+                      : "Chọn tỉnh trước"
+                  }
+                  searchPlaceholder="Tìm theo xã/phường..."
+                  emptyText="Không tìm thấy xã/phường"
+                  clearable
+                  autocomplete
+                  disabled={!selectedProvinceCode}
+                />
+              )}
+            />
+            {errors.commune ? (
+              <p className="text-sm text-rose-600">{errors.commune.message}</p>
             ) : null}
           </div>
 

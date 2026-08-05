@@ -6,6 +6,8 @@ export type ReferrerListItem = {
   fullName: string;
   phoneNumber?: string;
   operatingArea: string;
+  province?: string;
+  commune?: string;
   birthYear: number;
   roleCodes: string[];
   status: string;
@@ -24,6 +26,7 @@ export type ReferrerListResponse = {
 };
 
 export type CreateReferrerResponse = ReferrerListItem;
+export type UpdateReferrerResponse = ReferrerListItem;
 
 export type UpdateReferrerStatusResponse = {
   userId: number;

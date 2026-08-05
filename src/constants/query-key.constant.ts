@@ -6,6 +6,7 @@ export const QUERY_KEY = {
   REFERRERS: {
     LIST: ["referrers", "list"] as const,
     CREATE: ["referrers", "create"] as const,
+    UPDATE: ["referrers", "update"] as const,
     UPDATE_STATUS: ["referrers", "update-status"] as const,
     BULK_UPLOAD: ["referrers", "bulk-upload"] as const,
     BULK_UPLOAD_JOB: ["referrers", "bulk-upload-job"] as const,
@@ -24,5 +25,8 @@ export const QUERY_KEY = {
   },
   PROVINCES: {
     LIST: ["provinces", "list"] as const,
+  },
+  WARDS: {
+    LIST: ["wards", "list"] as const,
   },
 } as const;

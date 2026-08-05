@@ -8,6 +8,13 @@ export type CreateReferrerRequest = {
   phoneNumber: string;
   fullName: string;
   province: string;
+  commune: string;
+};
+
+export type UpdateReferrerRequest = {
+  fullName: string;
+  province: string;
+  commune: string;
 };
 
 export type UpdateReferrerStatusRequest = {

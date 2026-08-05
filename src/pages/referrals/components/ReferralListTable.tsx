@@ -12,6 +12,7 @@ type ReferralListTableProps = {
   onSearch: (value: string) => void;
   onPageSize: (value: number) => void;
   onIndexChange: (value: number) => void;
+  onEdit?: (row: ReferralRow) => void;
 };
 
 export function ReferralListTable({
@@ -24,12 +25,14 @@ export function ReferralListTable({
   onSearch,
   onPageSize,
   onIndexChange,
+  onEdit,
 }: ReferralListTableProps) {
   const columns: Column<ReferralRow>[] = useMemo(
     () => [
       { key: "fullName", label: "Người giới thiệu", sortable: true },
       { key: "phone", label: "Số điện thoại" },
       { key: "province", label: "Tỉnh" },
+      { key: "commune", label: "Phường/Xã" },
       { key: "updatedAt", label: "Cập nhật gần nhất" },
     ],
     [],
@@ -47,6 +50,7 @@ export function ReferralListTable({
       currentIndex={currentIndex}
       totalElements={totalElements}
       totalPages={totalPages}
+      onEdit={onEdit}
       onSearch={onSearch}
       onPageSize={onPageSize}
       onIndexChange={onIndexChange}

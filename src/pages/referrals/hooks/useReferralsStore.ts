@@ -27,6 +27,7 @@ function readReferrals() {
       phone: referral.phone,
       fullName: referral.fullName,
       province: referral.province,
+      commune: referral.commune ?? "",
       status: validReferralStatuses.includes(referral.status as ReferralStatus)
         ? (referral.status as ReferralStatus)
         : 'Hoạt động',
@@ -44,6 +45,7 @@ export function buildReferralFormValues(referral?: ReferralRow | null): Referral
     phone: referral.phone,
     fullName: referral.fullName,
     province: referral.province,
+    commune: referral.commune ?? "",
     status: referral.status,
   }
 }
@@ -73,6 +75,7 @@ export function useReferralsStore() {
       phone: normalizedPhone,
       fullName: values.fullName.trim(),
       province: values.province.trim(),
+      commune: values.commune?.trim() ?? "",
       status: values.status,
       updatedAt: formatNow(),
     }
@@ -92,6 +95,7 @@ export function useReferralsStore() {
               phone: normalizedPhone,
               fullName: values.fullName.trim(),
               province: values.province.trim(),
+              commune: values.commune?.trim() ?? "",
               status: values.status,
               updatedAt: formatNow(),
             }
@@ -118,6 +122,7 @@ export function useReferralsStore() {
           phone: normalizedPhone,
           fullName: value.fullName.trim(),
           province: value.province.trim(),
+          commune: value.commune?.trim() ?? "",
           status: value.status || 'Hoạt động',
           updatedAt: formatNow(),
         }

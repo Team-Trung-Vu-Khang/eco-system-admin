@@ -4,11 +4,13 @@ import type { BulkUploadReferrersRequest } from "./referrers.request";
 import type { CreateReferrerRequest } from "./referrers.request";
 import type { GetBulkUploadReferrerJobRequest } from "./referrers.request";
 import type { GetReferrersRequest } from "./referrers.request";
+import type { UpdateReferrerRequest } from "./referrers.request";
 import type { UpdateReferrerStatusRequest } from "./referrers.request";
 import type { BulkUploadReferrersResponse } from "./referrers.response";
 import type { CreateReferrerResponse } from "./referrers.response";
 import type { BulkUploadReferrerJobResponse } from "./referrers.response";
 import type { ReferrerListResponse } from "./referrers.response";
+import type { UpdateReferrerResponse } from "./referrers.response";
 import type { UpdateReferrerStatusResponse } from "./referrers.response";
 
 function buildReferrerListParams(
@@ -33,6 +35,13 @@ export async function createReferrer(
   body: CreateReferrerRequest,
 ): Promise<CreateReferrerResponse> {
   return apiClient.post<CreateReferrerResponse>(PATH.REFERRERS.CREATE, body);
+}
+
+export async function updateReferrer(
+  userId: number | string,
+  body: UpdateReferrerRequest,
+): Promise<UpdateReferrerResponse> {
+  return apiClient.put<UpdateReferrerResponse>(PATH.REFERRERS.UPDATE(userId), body);
 }
 
 export async function updateReferrerStatus(

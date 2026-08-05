@@ -9,6 +9,7 @@ export const PATH = {
   REFERRERS: {
     LIST: "/api/admin/referrers",
     CREATE: "/api/admin/referrers",
+    UPDATE: (userId: number | string) => `/api/admin/referrers/${userId}`,
     UPDATE_STATUS: (userId: number | string) =>
       `/api/admin/referrers/${userId}/status`,
     BULK_UPLOAD: "/api/admin/referrers/bulk-upload",
@@ -31,6 +32,9 @@ export const PATH = {
   },
   PROVINCES: {
     LIST: "/api/admin/master-data/geo/provinces",
+  },
+  WARDS: {
+    LIST: "/api/admin/master-data/geo/wards",
   },
   APP: {
     HOME: "/users",

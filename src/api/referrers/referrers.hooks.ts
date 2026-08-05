@@ -3,12 +3,14 @@ import { QUERY_KEY } from "@/constants/query-key.constant";
 import type {
   GetBulkUploadReferrerJobRequest,
   GetReferrersRequest,
+  UpdateReferrerRequest,
 } from "./referrers.request";
 import {
   bulkUploadReferrers,
   createReferrer,
   getBulkUploadReferrerJob,
   getReferrers,
+  updateReferrer,
   updateReferrerStatus,
 } from "./referrers.api";
 
@@ -25,6 +27,24 @@ export function useCreateReferrerMutation() {
   return useMutation({
     mutationKey: QUERY_KEY.REFERRERS.CREATE,
     mutationFn: createReferrer,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEY.REFERRERS.LIST,
+      });
+    },
+  });
+}
+
+export function useUpdateReferrerMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: QUERY_KEY.REFERRERS.UPDATE,
+    mutationFn: ({
+      userId,
+      ...body
+    }: UpdateReferrerRequest & { userId: number | string }) =>
+      updateReferrer(userId, body),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: QUERY_KEY.REFERRERS.LIST,

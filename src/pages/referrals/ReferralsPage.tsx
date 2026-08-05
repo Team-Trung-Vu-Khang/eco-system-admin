@@ -8,10 +8,12 @@ import {
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import * as XLSX from "xlsx";
+import { useToast } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import { QUERY_KEY } from "@/constants/query-key.constant";
 import {
   useBulkUploadReferrerJobQuery,
   useBulkUploadReferrersMutation,
+  useUpdateReferrerMutation,
   useReferrersQuery,
 } from "@/api/referrers/referrers.hooks";
 import {
@@ -23,12 +25,18 @@ import {
 } from "./data/referrals";
 import { ReferralListTable } from "./components/ReferralListTable";
 import { ReferralPageHeader } from "./components/ReferralPageHeader";
+import { ReferralEditDialog } from "./components/ReferralEditDialog";
 import { ReferralUploadDialog } from "./components/ReferralUploadDialog";
+import { getApiErrorDescription } from "@/lib/api-error";
+import type { ReferralRow } from "./data/referrals";
 
 export function ReferralsPage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedReferral, setSelectedReferral] = useState<ReferralRow | null>(null);
   const [uploadText, setUploadText] = useState("");
   const [uploadFileName, setUploadFileName] = useState("");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -47,6 +55,7 @@ export function ReferralsPage() {
     size: pageSize,
   });
   const bulkUploadMutation = useBulkUploadReferrersMutation();
+  const updateReferrerMutation = useUpdateReferrerMutation();
   const uploadJobQuery = useBulkUploadReferrerJobQuery(
     uploadJobId ? { jobExecutionId: uploadJobId } : null,
   );
@@ -73,6 +82,11 @@ export function ReferralsPage() {
 
   const openCreate = () => {
     setLocation("/referrals/create");
+  };
+
+  const openEdit = (referral: ReferralRow) => {
+    setSelectedReferral(referral);
+    setEditOpen(true);
   };
 
   const handleSearch = (value: string) => {
@@ -126,6 +140,10 @@ export function ReferralsPage() {
     appliedUploadJobIdRef.current = null;
   };
 
+  const resetEditDialog = () => {
+    setSelectedReferral(null);
+  };
+
   const onUploadFileLoaded = (text: string, fileName: string, file: File) => {
     setUploadText(text);
     setUploadFileName(fileName);
@@ -167,6 +185,7 @@ export function ReferralsPage() {
         onPageSize={setPageSize}
         onIndexChange={(value) => setCurrentIndex(Math.max(0, value - 1))}
         loading={listLoading}
+        onEdit={openEdit}
       />
 
       <ReferralUploadDialog
@@ -181,6 +200,49 @@ export function ReferralsPage() {
         onDownloadTemplate={downloadReferralTemplate}
         onSubmit={submitUpload}
         onReset={resetUploadDialog}
+      />
+
+      <ReferralEditDialog
+        open={editOpen}
+        onOpenChange={(nextOpen) => {
+          setEditOpen(nextOpen);
+          if (!nextOpen) {
+            resetEditDialog();
+          }
+        }}
+        referral={selectedReferral}
+        loading={updateReferrerMutation.isPending}
+        onSubmit={async (values) => {
+          if (!selectedReferral) {
+            return;
+          }
+
+          try {
+            await updateReferrerMutation.mutateAsync({
+              userId: Number(selectedReferral.id),
+              ...values,
+            });
+
+            toast({
+              title: "Cập nhật người giới thiệu thành công",
+              description: "Thông tin người giới thiệu đã được lưu lại.",
+              duration: 2000,
+            });
+            setEditOpen(false);
+            resetEditDialog();
+          } catch (error) {
+            console.error(error);
+            toast({
+              title: "Không thể cập nhật người giới thiệu",
+              description: getApiErrorDescription(
+                error,
+                "Vui lòng kiểm tra lại thông tin và thử lại.",
+              ),
+              variant: "destructive",
+              duration: 2000,
+            });
+          }
+        }}
       />
     </section>
   );
