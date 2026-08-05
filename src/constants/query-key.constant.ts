@@ -10,6 +10,15 @@ export const QUERY_KEY = {
     BULK_UPLOAD: ["referrers", "bulk-upload"] as const,
     BULK_UPLOAD_JOB: ["referrers", "bulk-upload-job"] as const,
   },
+  USERS: {
+    LIST: ["users", "list"] as const,
+    CREATE: ["users", "create"] as const,
+    ASSIGN_ROLE: ["users", "assign-role"] as const,
+    WORKSPACES: ["users", "workspaces"] as const,
+    REVOKE_ROLE: ["users", "revoke-role"] as const,
+    SET_REFERRER: ["users", "set-referrer"] as const,
+    RESET_DEFAULT_PASSWORD: ["users", "reset-default-password"] as const,
+  },
   PROVINCES: {
     LIST: ["provinces", "list"] as const,
   },

@@ -15,6 +15,18 @@ export const PATH = {
     BULK_UPLOAD_JOB: (jobExecutionId: number | string) =>
       `/api/admin/referrers/bulk-upload/${jobExecutionId}`,
   },
+  USERS: {
+    LIST: "/api/admin/users",
+    CREATE: "/api/admin/users",
+    ASSIGN_ROLE: (userId: number | string) => `/api/admin/users/${userId}/roles`,
+    WORKSPACES: (userId: number | string) => `/api/admin/users/${userId}/workspaces`,
+    REVOKE_ROLE: (userId: number | string, roleId: number | string) =>
+      `/api/admin/users/${userId}/roles/${roleId}`,
+    SET_REFERRER: (userId: number | string) =>
+      `/api/admin/users/${userId}/referrer`,
+    RESET_DEFAULT_PASSWORD: (userId: number | string) =>
+      `/api/admin/users/${userId}/password/reset-default`,
+  },
   PROVINCES: {
     LIST: "/api/admin/master-data/geo/provinces",
   },
