@@ -15,6 +15,7 @@ import { useCreateReferrerMutation } from "@/api/referrers/referrers.hooks";
 import { useProvincesQuery } from "@/api/provinces/provinces.hooks";
 import { useWardsQuery } from "@/api/wards/wards.hooks";
 import { normalizePhoneTo84 } from "./data/referrals";
+import { getApiErrorDescription } from "@/lib/api-error";
 
 const referralCreateSchema = z.object({
   fullName: z.string().trim().min(1, "Vui lòng nhập tên"),
@@ -24,7 +25,7 @@ const referralCreateSchema = z.object({
     .min(1, "Vui lòng nhập số điện thoại")
     .refine((value) => normalizePhoneTo84(value).startsWith("84"), {
       message: "Số điện thoại phải quy về đầu 84",
-  }),
+    }),
   province: z.string().trim().min(1, "Vui lòng chọn nhập tỉnh"),
   commune: z.string().trim().min(1, "Vui lòng nhập xã/phường"),
 });
@@ -121,7 +122,10 @@ export function ReferralCreatePage() {
 
           toast({
             title: "Không thể tạo người giới thiệu",
-            description: "Vui lòng thử lại.",
+            description: getApiErrorDescription(
+              error,
+              "Vui lòng kiểm tra lại thông tin và thử lại.",
+            ),
             variant: "destructive",
             duration: 2000,
           });
@@ -243,9 +247,7 @@ export function ReferralCreatePage() {
                   onChange={field.onChange}
                   options={communeOptions}
                   placeholder={
-                    selectedProvinceCode
-                      ? "Chọn xã/phường"
-                      : "Chọn tỉnh trước"
+                    selectedProvinceCode ? "Chọn xã/phường" : "Chọn tỉnh trước"
                   }
                   searchPlaceholder="Tìm theo xã/phường..."
                   emptyText="Không tìm thấy xã/phường"
@@ -259,7 +261,6 @@ export function ReferralCreatePage() {
               <p className="text-sm text-rose-600">{errors.commune.message}</p>
             ) : null}
           </div>
-
         </div>
 
         <div className="flex flex-wrap justify-end gap-2 border-t border-black/5 pt-4">
