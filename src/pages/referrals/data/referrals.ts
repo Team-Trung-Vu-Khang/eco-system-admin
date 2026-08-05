@@ -45,6 +45,8 @@ export type ReferralUploadReview = {
   failCount: number;
 };
 
+export const vietnamMobilePhoneRegex = /^(?:\+?84|0)(3|5|7|8|9)\d{8}$/;
+
 export const referralStatusOptions = [
   { label: "Hoạt động", value: "Hoạt động" },
   { label: "Không hoạt động", value: "Không hoạt động" },

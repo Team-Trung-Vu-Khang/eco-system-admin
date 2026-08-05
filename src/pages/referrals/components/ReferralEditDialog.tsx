@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { FormDialog, Input, Label } from "@Team-Trung-Vu-Khang/eco-shared-ui";
-import type { ReferralRow } from "../data/referrals";
+import {
+  vietnamMobilePhoneRegex,
+  type ReferralRow,
+} from "../data/referrals";
 
 type ReferralEditFormValues = {
   phone: string;
@@ -37,6 +40,8 @@ function validate(values: ReferralEditFormValues) {
 
   if (!values.phone.trim()) {
     errors.phone = "Vui lòng nhập số điện thoại";
+  } else if (!vietnamMobilePhoneRegex.test(values.phone.trim())) {
+    errors.phone = "Số điện thoại không hợp lệ";
   }
 
   if (!values.fullName.trim()) {

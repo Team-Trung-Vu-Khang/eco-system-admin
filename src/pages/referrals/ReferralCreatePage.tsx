@@ -14,7 +14,10 @@ import {
 import { useCreateReferrerMutation } from "@/api/referrers/referrers.hooks";
 import { useProvincesQuery } from "@/api/provinces/provinces.hooks";
 import { useWardsQuery } from "@/api/wards/wards.hooks";
-import { normalizePhoneTo84 } from "./data/referrals";
+import {
+  normalizePhoneTo84,
+  vietnamMobilePhoneRegex,
+} from "./data/referrals";
 import { getApiErrorDescription } from "@/lib/api-error";
 
 const referralCreateSchema = z.object({
@@ -23,8 +26,8 @@ const referralCreateSchema = z.object({
     .string()
     .trim()
     .min(1, "Vui lòng nhập số điện thoại")
-    .refine((value) => normalizePhoneTo84(value).startsWith("84"), {
-      message: "Số điện thoại phải quy về đầu 84",
+    .regex(vietnamMobilePhoneRegex, {
+      message: "Số điện thoại không hợp lệ",
     }),
   province: z.string().trim().min(1, "Vui lòng chọn nhập tỉnh"),
   commune: z.string().trim().min(1, "Vui lòng nhập xã/phường"),
