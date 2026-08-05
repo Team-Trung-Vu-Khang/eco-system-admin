@@ -48,6 +48,14 @@ export function ReferralUploadDialog({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const rows = uploadResult?.rows ?? uploadReview.rows;
   const currentSummary = uploadResult ?? uploadReview;
+  const uploadResultCounts = uploadJob?.result
+    ? {
+        created: uploadJob.result.created ?? 0,
+        promoted: uploadJob.result.promoted ?? 0,
+        skippedDuplicates: uploadJob.result.skippedDuplicates ?? 0,
+        failed: uploadJob.result.failed ?? 0,
+      }
+    : null;
   const uploadProgress = uploadJob?.progress ?? null;
   const processedRows = uploadProgress?.processedRows ?? 0;
   const totalRows = uploadProgress?.totalRows ?? 0;
@@ -237,38 +245,17 @@ export function ReferralUploadDialog({
                 <Badge variant="secondary">{jobStatusLabel}</Badge>
               </div>
               <div className="mt-3 space-y-3">
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
-                    Kết quả
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>{progressLabel}</span>
+                    <span className="font-medium">
+                      {uploadJob.result ? "100%" : `${progressValue}%`}
+                    </span>
                   </div>
-                  <div className="mt-1 text-sm">
-                    {uploadJob.result
-                      ? [
-                          `Tạo mới: ${uploadJob.result.created}`,
-                          `Nâng cấp: ${uploadJob.result.promoted}`,
-                          `Bỏ qua trùng: ${uploadJob.result.skippedDuplicates}`,
-                          `Lỗi: ${uploadJob.result.failed}`,
-                        ].join(" · ")
-                      : "Đang xử lý..."}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
-                    Tiến độ
-                  </div>
-                  <div className="mt-2 space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span>{progressLabel}</span>
-                      <span className="font-medium">
-                        {uploadJob.result ? "100%" : `${progressValue}%`}
-                      </span>
-                    </div>
-                    <Progress
-                      value={progressValue}
-                      className="h-2 rounded-full bg-sky-100"
-                    />
-                  </div>
+                  <Progress
+                    value={progressValue}
+                    className="h-2 rounded-full bg-sky-100"
+                  />
                 </div>
               </div>
               {uploadJob.result?.errors.length ? (
