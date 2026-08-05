@@ -132,6 +132,7 @@ export const userAccountFormSchema = z.object({
 export type UserAccountFormValues = z.infer<typeof userAccountFormSchema>;
 
 type UserAccountFormProps = {
+  mode?: "create" | "edit";
   title: string;
   description: string;
   submitLabel: string;
@@ -157,6 +158,7 @@ function fieldErrorMessage(error?: { message?: string }) {
 }
 
 export function UserAccountForm({
+  mode = "create",
   title,
   description,
   submitLabel,
@@ -277,6 +279,7 @@ export function UserAccountForm({
               id="phoneNumber"
               placeholder="0885 665 919"
               aria-invalid={Boolean(errors.phoneNumber)}
+              disabled={mode === "edit"}
               {...register("phoneNumber")}
             />
             {fieldErrorMessage(errors.phoneNumber) ? (
@@ -373,7 +376,9 @@ export function UserAccountForm({
                   clearable
                   autocomplete
                   disabled={
-                    referrersQuery.isPending || referrersQuery.isFetching
+                    mode === "edit" ||
+                    referrersQuery.isPending ||
+                    referrersQuery.isFetching
                   }
                 />
               )}
@@ -420,8 +425,9 @@ export function UserAccountForm({
                             >
                               <input
                                 type="checkbox"
-                                className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 disabled:opacity-50"
                                 checked={checked}
+                                disabled={mode === "edit"}
                                 onChange={(event) => {
                                   const next = event.target.checked
                                     ? Array.from(

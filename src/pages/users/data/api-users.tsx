@@ -16,6 +16,8 @@ export type UserListRow = {
   username: string;
   email: string;
   operatingArea: string;
+  province: string;
+  commune: string;
   birthYear: string;
   roleCodes: string[];
   status: string;
@@ -64,6 +66,8 @@ export function mapUserItemToRow(item: UserItem): UserListRow {
     username: toText(item.username),
     email: toText(item.email),
     operatingArea: toText(item.operatingArea),
+    province: toText(item.province),
+    commune: toText(item.commune),
     birthYear: toText(item.birthYear),
     roleCodes: Array.isArray(item.roleCodes)
       ? item.roleCodes.filter(Boolean)
@@ -124,7 +128,9 @@ export const userColumns: Column<UserListRow>[] = [
   { key: "fullName", label: "Họ và tên", sortable: true },
   { key: "username", label: "Tên đăng nhập" },
   { key: "email", label: "Email" },
-  { key: "operatingArea", label: "Khu vực" },
+  { key: "operatingArea", label: "Khu vực HĐ" },
+  { key: "province", label: "Tỉnh/TP" },
+  { key: "commune", label: "Xã/Phường" },
   { key: "birthYear", label: "Năm sinh" },
   {
     key: "roleCodes",

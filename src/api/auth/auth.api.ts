@@ -51,6 +51,9 @@ export const authApi = {
   getCallbackToken() {
     return new URLSearchParams(window.location.search).get("token");
   },
+  getCallbackError() {
+    return new URLSearchParams(window.location.search).get("error");
+  },
   async getMe(token = authStorage.getToken()) {
     return this.getCurrentUser(token);
   },

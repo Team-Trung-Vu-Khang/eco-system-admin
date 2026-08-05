@@ -1,3 +1,5 @@
+import type { AdminUserAudienceType } from "./users.request";
+
 export type UserItem = {
   id: number;
   code: string;
@@ -5,6 +7,8 @@ export type UserItem = {
   email: string;
   fullName: string;
   operatingArea: string;
+  province?: string;
+  commune?: string;
   birthYear: number;
   roleCodes: string[];
   status: string;
@@ -16,6 +20,12 @@ export type UserDetailResponse = UserItem & {
   phoneNumber?: string;
   province: string;
   commune: string;
+  audienceType?: AdminUserAudienceType;
+  referrer?: {
+    referrerId: number;
+    fullName: string;
+    phoneNumber: string;
+  } | null;
 };
 
 export type UserListResponse = {

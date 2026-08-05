@@ -40,7 +40,13 @@ export type AdminCreateUserRequest = {
 };
 
 export type UpdateUserRequest = {
-  operatingArea: string;
+  fullName: string;
+  email?: string | null;
+  operatingArea?: string | null;
+  province?: string | null;
+  commune?: string | null;
+  birthYear?: number | null;
+  audienceType?: AdminUserAudienceType | null;
 };
 
 export type UpdateUserStatusRequest = {

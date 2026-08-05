@@ -1,7 +1,11 @@
 import { ArrowLeft, Pencil } from "lucide-react";
 import { useLocation, useParams } from "wouter";
 import { Button, useToast } from "@Team-Trung-Vu-Khang/eco-shared-ui";
-import { useUpdateUserMutation, useUserQuery } from "@/api/users/users.hooks";
+import {
+  useUpdateUserMutation,
+  useUpdateUserStatusMutation,
+  useUserQuery,
+} from "@/api/users/users.hooks";
 import type { UserDetailResponse } from "@/api/users/users.response";
 import { getApiErrorDescription } from "@/lib/api-error";
 import {
@@ -18,8 +22,8 @@ function mapUserDetailToFormValues(
     phoneNumber: user.phoneNumber ?? user.username,
     operatingArea: user.operatingArea ?? "",
     birthYear: String(user.birthYear),
-    referrerPhoneNumber: "",
-    audienceType: "other",
+    referrerPhoneNumber: user.referrer?.phoneNumber ?? "",
+    audienceType: user.audienceType ?? "other",
     roles: user.roleCodes,
   };
 }
@@ -32,6 +36,7 @@ export function UsersEditPage() {
   const resolvedUserId = Number.isNaN(userId ?? NaN) ? null : userId;
   const userQuery = useUserQuery(resolvedUserId);
   const updateUserMutation = useUpdateUserMutation();
+  const updateStatusMutation = useUpdateUserStatusMutation();
 
   if (resolvedUserId === null) {
     return (
@@ -141,10 +146,59 @@ export function UsersEditPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại
           </Button>
+
+          {userQuery.data ? (
+            <Button
+              variant={
+                userQuery.data.status === "active" ? "destructive" : "secondary"
+              }
+              type="button"
+              disabled={updateStatusMutation.isPending}
+              onClick={async () => {
+                const isLocking = userQuery.data.status === "active";
+                if (
+                  !window.confirm(
+                    isLocking
+                      ? "Bạn có chắc chắn muốn khóa tài khoản này không?"
+                      : "Bạn có chắc chắn muốn mở khóa tài khoản này không?",
+                  )
+                )
+                  return;
+                try {
+                  await updateStatusMutation.mutateAsync({
+                    userId: resolvedUserId,
+                    status: isLocking ? "inactive" : "active",
+                  });
+                  toast({
+                    title: isLocking
+                      ? "Đã khóa tài khoản"
+                      : "Đã mở khóa tài khoản",
+                    duration: 2000,
+                  });
+                } catch (error) {
+                  console.error(error);
+                  toast({
+                    title: "Lỗi cập nhật trạng thái",
+                    description: getApiErrorDescription(
+                      error,
+                      "Không thể cập nhật trạng thái tài khoản.",
+                    ),
+                    variant: "destructive",
+                    duration: 2000,
+                  });
+                }
+              }}
+            >
+              {userQuery.data.status === "active"
+                ? "Khóa tài khoản"
+                : "Mở tài khoản"}
+            </Button>
+          ) : null}
         </div>
       </div>
 
       <UserAccountForm
+        mode="edit"
         title="Thông tin tài khoản"
         description="Chỉ cập nhật khu vực hoạt động của tài khoản."
         submitLabel={
@@ -156,7 +210,11 @@ export function UsersEditPage() {
           try {
             await updateUserMutation.mutateAsync({
               userId: resolvedUserId,
-              ...values,
+              fullName: values.fullName,
+              email: values.email || null,
+              operatingArea: values.operatingArea || null,
+              birthYear: values.birthYear ? Number(values.birthYear) : null,
+              audienceType: values.audienceType || null,
             });
 
             toast({
