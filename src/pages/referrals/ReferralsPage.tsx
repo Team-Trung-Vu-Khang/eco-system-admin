@@ -12,6 +12,7 @@ import { QUERY_KEY } from "@/constants/query-key.constant";
 import {
   useBulkUploadReferrerJobQuery,
   useBulkUploadReferrersMutation,
+  useUpdateReferrerStatusMutation,
   useUpdateReferrerMutation,
   useReferrersQuery,
 } from "@/api/referrers/referrers.hooks";
@@ -24,6 +25,7 @@ import {
 import { ReferralListTable } from "./components/ReferralListTable";
 import { ReferralPageHeader } from "./components/ReferralPageHeader";
 import { ReferralEditDialog } from "./components/ReferralEditDialog";
+import { ReferralStatusConfirmDialog } from "./components/ReferralStatusConfirmDialog";
 import { ReferralUploadDialog } from "./components/ReferralUploadDialog";
 import { getApiErrorDescription } from "@/lib/api-error";
 import type { ReferralRow } from "./data/referrals";
@@ -45,6 +47,9 @@ export function ReferralsPage() {
   const [pageSize, setPageSize] = useState(10);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusOpen, setStatusOpen] = useState(false);
+  const [selectedStatusReferral, setSelectedStatusReferral] =
+    useState<ReferralRow | null>(null);
   const deferredSearchTerm = useDeferredValue(searchTerm);
   const appliedUploadJobIdRef = useRef<number | null>(null);
   const referrersQuery = useReferrersQuery({
@@ -54,6 +59,7 @@ export function ReferralsPage() {
   });
   const bulkUploadMutation = useBulkUploadReferrersMutation();
   const updateReferrerMutation = useUpdateReferrerMutation();
+  const updateReferrerStatusMutation = useUpdateReferrerStatusMutation();
   const uploadJobQuery = useBulkUploadReferrerJobQuery(
     uploadJobId ? { jobExecutionId: uploadJobId } : null,
   );
@@ -85,6 +91,11 @@ export function ReferralsPage() {
   const openEdit = (referral: ReferralRow) => {
     setSelectedReferral(referral);
     setEditOpen(true);
+  };
+
+  const openStatusConfirm = (referral: ReferralRow) => {
+    setSelectedStatusReferral(referral);
+    setStatusOpen(true);
   };
 
   const handleSearch = (value: string) => {
@@ -131,6 +142,10 @@ export function ReferralsPage() {
     setSelectedReferral(null);
   };
 
+  const resetStatusDialog = () => {
+    setSelectedStatusReferral(null);
+  };
+
   const onUploadFileLoaded = (text: string, fileName: string, file: File) => {
     setUploadText(text);
     setUploadFileName(fileName);
@@ -173,6 +188,7 @@ export function ReferralsPage() {
         onIndexChange={(value) => setCurrentIndex(Math.max(0, value - 1))}
         loading={listLoading}
         onEdit={openEdit}
+        onToggleStatus={openStatusConfirm}
       />
 
       <ReferralUploadDialog
@@ -227,6 +243,49 @@ export function ReferralsPage() {
               description: getApiErrorDescription(
                 error,
                 "Vui lòng kiểm tra lại thông tin và thử lại.",
+              ),
+              variant: "destructive",
+              duration: 2000,
+            });
+          }
+        }}
+      />
+
+      <ReferralStatusConfirmDialog
+        open={statusOpen}
+        onOpenChange={(nextOpen) => {
+          setStatusOpen(nextOpen);
+          if (!nextOpen) {
+            resetStatusDialog();
+          }
+        }}
+        referral={selectedStatusReferral}
+        loading={updateReferrerStatusMutation.isPending}
+        onConfirm={async () => {
+          if (!selectedStatusReferral) {
+            return;
+          }
+
+          try {
+            await updateReferrerStatusMutation.mutateAsync({
+              referrerId: Number(selectedStatusReferral.id),
+              active: selectedStatusReferral.status !== "Hoạt động",
+            });
+
+            toast({
+              title: "Cập nhật trạng thái người giới thiệu thành công",
+              description: "Trạng thái đã được lưu lại.",
+              duration: 2000,
+            });
+            setStatusOpen(false);
+            resetStatusDialog();
+          } catch (error) {
+            console.error(error);
+            toast({
+              title: "Không thể cập nhật trạng thái",
+              description: getApiErrorDescription(
+                error,
+                "Vui lòng thử lại sau.",
               ),
               variant: "destructive",
               duration: 2000,

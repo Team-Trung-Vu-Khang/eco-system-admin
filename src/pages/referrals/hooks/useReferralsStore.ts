@@ -10,7 +10,7 @@ import {
   type ReferralRow,
 } from '../data/referrals'
 
-const validReferralStatuses: ReferralStatus[] = ['Hoạt động', 'Khoá']
+const validReferralStatuses: ReferralStatus[] = ["Hoạt động", "Không hoạt động"];
 
 function readReferrals() {
   if (typeof window === 'undefined') return seedReferrals
@@ -30,7 +30,7 @@ function readReferrals() {
       commune: referral.commune ?? "",
       status: validReferralStatuses.includes(referral.status as ReferralStatus)
         ? (referral.status as ReferralStatus)
-        : 'Hoạt động',
+        : "Hoạt động",
       updatedAt: referral.updatedAt,
     }))
   } catch {
@@ -123,7 +123,7 @@ export function useReferralsStore() {
           fullName: value.fullName.trim(),
           province: value.province.trim(),
           commune: value.commune?.trim() ?? "",
-          status: value.status || 'Hoạt động',
+          status: value.status || "Hoạt động",
           updatedAt: formatNow(),
         }
 

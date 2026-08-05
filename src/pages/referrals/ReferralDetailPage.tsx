@@ -21,6 +21,7 @@ import { useUsers } from "../users/hooks/useUsers";
 import {
   normalizePhoneTo84,
   referralStatusOptions,
+  vietnamMobilePhoneRegex,
   type ReferralFormErrors,
   type ReferralFormValues,
   type ReferralRow,
@@ -30,11 +31,10 @@ import { getFeatureDuplicateMessage } from "@/constants/message.constant";
 
 function validate(values: ReferralFormValues) {
   const errors: ReferralFormErrors = {};
-  const normalizedPhone = normalizePhoneTo84(values.phone);
 
   if (!values.phone.trim()) errors.phone = "Vui lòng nhập số điện thoại";
-  else if (!normalizedPhone.startsWith("84")) {
-    errors.phone = "Số điện thoại phải quy về đầu 84";
+  else if (!vietnamMobilePhoneRegex.test(values.phone.trim())) {
+    errors.phone = "Số điện thoại không hợp lệ";
   }
 
   if (!values.fullName.trim()) errors.fullName = "Vui lòng nhập tên";

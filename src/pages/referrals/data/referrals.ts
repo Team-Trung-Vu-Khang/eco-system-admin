@@ -2,7 +2,7 @@ import * as XLSX from "xlsx";
 import type { ReferrerListItem } from "@/api/referrers/referrers.response";
 import { getFeatureDuplicateMessage } from "@/constants/message.constant";
 
-export type ReferralStatus = "Hoạt động" | "Khoá";
+export type ReferralStatus = "Hoạt động" | "Không hoạt động";
 
 export type ReferralRow = {
   id: string;
@@ -45,9 +45,11 @@ export type ReferralUploadReview = {
   failCount: number;
 };
 
+export const vietnamMobilePhoneRegex = /^(?:\+?84|0)(3|5|7|8|9)\d{8}$/;
+
 export const referralStatusOptions = [
   { label: "Hoạt động", value: "Hoạt động" },
-  { label: "Khoá", value: "Khoá" },
+  { label: "Không hoạt động", value: "Không hoạt động" },
 ];
 
 export const referralStorageKey = "eco-system-admin-referrals";
@@ -78,7 +80,7 @@ export const seedReferrals: ReferralRow[] = [
     fullName: "Lê Văn C",
     province: "Đồng Nai",
     commune: "Biên Hòa",
-    status: "Khoá",
+    status: "Không hoạt động",
     updatedAt: "31/07/2026 17:44",
   },
 ];
@@ -301,10 +303,11 @@ export function formatDateTime(value: string) {
 }
 
 export function normalizeReferralStatus(value: string): ReferralStatus {
-  return value.toLowerCase().includes("hoạt động") ||
-    value.toLowerCase().includes("active")
+  const normalized = value.trim().toLowerCase();
+
+  return normalized.includes("hoạt động") || normalized === "active"
     ? "Hoạt động"
-    : "Khoá";
+    : "Không hoạt động";
 }
 
 export function mapReferrerToReferralRow(item: ReferrerListItem): ReferralRow {
