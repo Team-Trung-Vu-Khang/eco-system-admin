@@ -168,6 +168,10 @@ export function reviewReferralUploadText(
       .split(/[,\t;|]/)
       .map((cell) => cell.trim());
 
+    if (columns.every((cell) => cell.length === 0)) {
+      continue;
+    }
+
     if (index === 0 && isUploadHeader(columns)) {
       continue;
     }

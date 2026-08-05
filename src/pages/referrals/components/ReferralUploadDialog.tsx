@@ -13,6 +13,7 @@ import {
   Progress,
   type Column,
 } from "@Team-Trung-Vu-Khang/eco-shared-ui";
+import { Loader2 } from "lucide-react";
 import { parseReferralUploadFile } from "../data/referrals";
 import type { BulkUploadReferrerJobResponse } from "@/api/referrers/referrers.response";
 import type { ReferralUploadReview } from "../data/referrals";
@@ -294,7 +295,10 @@ export function ReferralUploadDialog({
             onClick={onSubmit}
             disabled={uploadLoading || currentSummary.successCount === 0}
           >
-            Tải lên
+            {uploadLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
+            {uploadLoading ? "Đang tải lên..." : "Tải lên"}
           </Button>
         </DialogFooter>
       </DialogContent>
