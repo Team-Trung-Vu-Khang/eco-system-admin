@@ -68,9 +68,16 @@ export function useRevokeUserRoleMutation() {
 }
 
 export function useCreateUserMutation() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationKey: QUERY_KEY.USERS.CREATE,
     mutationFn: (body: AdminCreateUserRequest) => createUser(body),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEY.USERS.LIST,
+      });
+    },
   });
 }
 

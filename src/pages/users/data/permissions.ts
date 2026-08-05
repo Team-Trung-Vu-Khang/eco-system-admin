@@ -1,9 +1,9 @@
 export const accountPlatforms = [
-  { value: "edu", label: "Edu" },
-  { value: "farm", label: "Farm" },
-  { value: "factory", label: "Factory" },
-  { value: "shop", label: "Shop" },
-  { value: "system", label: "System" },
+  { value: "edu", label: "Trung tâm học tập MEVI" },
+  { value: "farm", label: "Trang trại MEVI" },
+  { value: "factory", label: "Mạng lưới nhà máy/cơ sở chế biến MEVI" },
+  { value: "shop", label: "Trạm xanh MEVI" },
+  { value: "system", label: "Quản trị hệ thống" },
 ] as const;
 
 export type AccountPlatform = (typeof accountPlatforms)[number]["value"];

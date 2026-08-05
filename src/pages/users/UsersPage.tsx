@@ -1,36 +1,65 @@
-import { Plus, Upload, Users } from "lucide-react";
-import {
-  Button,
-  DataTable,
-  DeleteDialog,
-} from "@Team-Trung-Vu-Khang/eco-shared-ui";
-import { ImportUsersDialog } from "./components/ImportUsersDialog";
-import { userColumns } from "./data/table";
-import { useUsers } from "./hooks/useUsers";
+import { useDeferredValue, useMemo, useState } from "react";
+import { Plus, Users } from "lucide-react";
+import { useLocation } from "wouter";
+import { Button, DataTable } from "@Team-Trung-Vu-Khang/eco-shared-ui";
+import { useUsersQuery } from "@/api/users/users.hooks";
+import { mapUserItemToRow, userColumns } from "./data/api-users";
 
 export default function UsersPage() {
-  const {
-    users,
-    loading,
-    response,
-    pageSize,
-    setPageSize,
-    currentIndex,
-    setCurrentIndex,
-    handleSearch,
-    deleteOpen,
-    setDeleteOpen,
-    importOpen,
-    setImportOpen,
-    handleDelete,
-    handleConfirmDelete,
-    handleImportData,
-    upsertManyUsers,
-    setLocation,
-    isDeleting,
-    filters,
-    handleFilterChange,
-  } = useUsers();
+  const [, setLocation] = useLocation();
+  const [pageSize, setPageSize] = useState(10);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const deferredSearchTerm = useDeferredValue(searchTerm);
+  const apiStatusFilter =
+    statusFilter === "all" ? undefined : statusFilter || undefined;
+
+  const usersQuery = useUsersQuery({
+    keyword: deferredSearchTerm.trim() || undefined,
+    status: apiStatusFilter,
+    page: currentIndex,
+    size: pageSize,
+  });
+
+  const users = useMemo(
+    () => usersQuery.data?.content?.map(mapUserItemToRow) ?? [],
+    [usersQuery.data?.content],
+  );
+
+  const filters = useMemo(
+    () => [
+      {
+        key: "status",
+        label: "Trạng thái",
+        options: [
+          { label: "Hoạt động", value: "active" },
+          { label: "Khóa", value: "locked" },
+        ],
+      },
+    ],
+    [],
+  );
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentIndex(0);
+  };
+
+  const handleFilterChange = (key: string, value: string) => {
+    if (key === "status") {
+      setStatusFilter(value);
+      setCurrentIndex(0);
+    }
+  };
+
+  const handlePageSize = (value: number) => {
+    setPageSize(value);
+    setCurrentIndex(0);
+  };
+
+  const loading = usersQuery.isPending || usersQuery.isFetching;
+  const tableIndex = currentIndex + 1;
 
   return (
     <section className="w-full space-y-6 rounded-3xl border border-black/5 bg-white/80 p-5 text-left shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur md:p-8">
@@ -45,17 +74,13 @@ export default function UsersPage() {
               Quản lý tài khoản
             </h2>
             <p className="max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
-              Danh sách tài khoản theo nền tảng, vai trò và trạng thái. Bạn có
-              thể tìm kiếm, lọc, sửa, xóa và nhập dữ liệu ngay tại đây.
+              Danh sách tài khoản được tải từ API, có thể tìm kiếm theo từ khóa
+              và lọc theo trạng thái.
             </p>
           </div>
         </div>
 
         <div className="flex shrink-0 flex-wrap gap-2">
-          <Button variant="outline" onClick={() => setImportOpen(true)}>
-            <Upload className="mr-2 h-4 w-4" />
-            Nhập dữ liệu
-          </Button>
           <Button onClick={() => setLocation("/users/create")}>
             <Plus className="mr-2 h-4 w-4" />
             Thêm mới
@@ -68,37 +93,18 @@ export default function UsersPage() {
         data={users}
         searchable
         onEdit={(item) => setLocation(`/users/${item.id}/edit`)}
-        onDelete={handleDelete}
-        searchPlaceholder="Tìm kiếm người dùng..."
+        searchPlaceholder="Tìm kiếm theo mã, tên, email, tên đăng nhập..."
         filters={filters}
         onFilterChange={handleFilterChange}
         selectable={false}
         loading={loading}
         pageSize={pageSize}
-        currentIndex={currentIndex}
-        totalElements={response?.totalElements}
-        totalPages={response?.totalPages}
+        currentIndex={tableIndex}
+        totalElements={usersQuery.data?.totalElements ?? 0}
+        totalPages={usersQuery.data?.totalPages ?? 1}
         onSearch={handleSearch}
-        onPageSize={setPageSize}
-        onIndexChange={setCurrentIndex}
-      />
-
-      <DeleteDialog
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        onConfirm={handleConfirmDelete}
-        description="Bạn có chắc chắn muốn xóa người dùng này? Hoạt động này không thể hoàn tác."
-        loading={isDeleting}
-      />
-
-      <ImportUsersDialog
-        open={importOpen}
-        onOpenChange={setImportOpen}
-        existingEmails={users.map((user) => user.email)}
-        onImport={(rows) => {
-          upsertManyUsers(rows);
-          handleImportData();
-        }}
+        onPageSize={handlePageSize}
+        onIndexChange={(value) => setCurrentIndex(Math.max(0, value - 1))}
       />
     </section>
   );

@@ -1,27 +1,47 @@
 import { useLocation } from "wouter";
 import { ArrowLeft, UserPlus } from "lucide-react";
 import { Button } from "@Team-Trung-Vu-Khang/eco-shared-ui";
-import { accountPlatforms, createPlatformGrants } from "../data/permissions";
+import { useCreateUserMutation } from "@/api/users/users.hooks";
 import {
   UserAccountForm,
   type UserAccountFormValues,
 } from "../components/UserAccountForm";
+import type { AdminCreateUserRequest } from "@/api/users/users.request";
 
 export function UsersCreatePage() {
   const [, setLocation] = useLocation();
+  const createUserMutation = useCreateUserMutation();
   const initialValues: UserAccountFormValues = {
     fullName: "",
     email: "",
-    phone: "",
+    phoneNumber: "",
+    operatingArea: "",
     birthYear: "",
-    address: "",
-    referralName: "",
-    status: "active",
-    note: "",
-    platformGrants: createPlatformGrants(
-      accountPlatforms.map((platform) => platform.value),
-      "admin",
-    ),
+    referrerPhoneNumber: "",
+    audienceType: "other",
+    roles: [],
+  };
+
+  const handleSubmit = async (values: UserAccountFormValues) => {
+    const payload: AdminCreateUserRequest = {
+      email: values.email.trim(),
+      fullName: values.fullName.trim(),
+      phoneNumber: values.phoneNumber.trim(),
+      operatingArea: values.operatingArea.trim(),
+      birthYear: Number(values.birthYear),
+      roles: values.roles,
+      audienceType: values.audienceType,
+      ...(values.referrerPhoneNumber.trim()
+        ? { referrerPhoneNumber: values.referrerPhoneNumber.trim() }
+        : {}),
+    };
+
+    try {
+      await createUserMutation.mutateAsync(payload);
+      setLocation("/users");
+    } catch {
+      // Keep the form open so the user can correct and retry.
+    }
   };
 
   return (
@@ -58,9 +78,10 @@ export function UsersCreatePage() {
       <UserAccountForm
         title="Thông tin tài khoản"
         description="Bổ sung thông tin người dùng cho từng phân hệ. Nếu thiếu thông tin định danh, hệ thống cần được cập nhật ngay khi tạo mới."
-        submitLabel="Tạo tài khoản"
+        submitLabel={createUserMutation.isPending ? "Đang tạo..." : "Tạo tài khoản"}
         initialValues={initialValues}
-        onSubmit={() => setLocation("/users")}
+        submitting={createUserMutation.isPending}
+        onSubmit={handleSubmit}
         onCancel={() => setLocation("/users")}
       />
     </section>

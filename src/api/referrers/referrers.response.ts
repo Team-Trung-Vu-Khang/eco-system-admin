@@ -4,6 +4,7 @@ export type ReferrerListItem = {
   username: string;
   email: string;
   fullName: string;
+  phoneNumber?: string;
   operatingArea: string;
   birthYear: number;
   roleCodes: string[];

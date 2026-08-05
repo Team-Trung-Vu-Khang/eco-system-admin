@@ -1,7 +1,6 @@
 import { ArrowLeft, Pencil } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@Team-Trung-Vu-Khang/eco-shared-ui";
-import { accountPlatforms, createPlatformGrants } from "../data/permissions";
 import {
   UserAccountForm,
   type UserAccountFormValues,
@@ -12,16 +11,12 @@ export function UsersEditPage() {
   const initialValues: UserAccountFormValues = {
     fullName: "Nguyễn Văn A",
     email: "a@example.com",
-    phone: "0901 234 567",
+    phoneNumber: "0901 234 567",
+    operatingArea: "Q.1, TP.HCM",
     birthYear: "1992",
-    address: "Q.1, TP.HCM",
-    referralName: "Trần Thị B",
-    status: "active",
-    note: "Người dùng mẫu để chỉnh sửa.",
-    platformGrants: createPlatformGrants(
-      accountPlatforms.map((platform) => platform.value),
-      "admin",
-    ),
+    referrerPhoneNumber: "0902 345 678",
+    audienceType: "business",
+    roles: ["MEVI_SUPER_ADMIN", "MEVI_EDU_TRAINEES"],
   };
 
   return (

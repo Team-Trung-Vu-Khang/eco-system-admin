@@ -1,15 +1,10 @@
-import { useState } from "react";
-import { Eye } from "lucide-react";
+import { useEffect, useMemo } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
-  Button,
   AutoCompleteSelect,
-  Checkbox,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  Button,
   Input,
   Label,
   Select,
@@ -17,135 +12,143 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Textarea,
 } from "@Team-Trung-Vu-Khang/eco-shared-ui";
-import {
-  accountPlatforms,
-  accountPermissions,
-  accountRoles,
-  type AccountPlatform,
-  type AccountPermission,
-  type AccountRole,
-  type AccountStatus,
-  createPlatformGrants,
-  getDefaultPermissionsForRole,
-  getMenuLeafKeys,
-  getPlatformLabel,
-  getPlatformPermissionMenus,
-  type PlatformGrant,
-  type PermissionMenuNode,
-} from "../data/permissions";
-import { referralNameOptions } from "../data/referrals";
+import type { AutoCompleteOption } from "@Team-Trung-Vu-Khang/eco-shared-ui";
+import { useReferrersQuery } from "@/api/referrers/referrers.hooks";
+import type { AdminUserAudienceType } from "@/api/users/users.request";
 
-export type UserAccountFormValues = {
-  fullName: string;
-  email: string;
-  phone: string;
-  birthYear: string;
-  address: string;
-  referralName: string;
-  status: AccountStatus;
-  note: string;
-  platformGrants: PlatformGrant[];
-};
+const audienceTypeOptions = [
+  { value: "individual", label: "Cá nhân" },
+  { value: "cooperative", label: "Hợp tác xã" },
+  { value: "business", label: "Doanh nghiệp" },
+  { value: "other", label: "Khác" },
+] as const;
+
+const allRoleOptions = [
+  {
+    code: "MEVI_SUPER_ADMIN",
+    label: "Quản trị tổng",
+    group: "Hệ thống",
+  },
+  { code: "MEVI_ADMIN", label: "Quản trị hệ thống", group: "Hệ thống" },
+  {
+    code: "MEVI_EDU_ADMIN",
+    label: "Quản trị giáo dục",
+    group: "Trung tâm học tập MEVI",
+  },
+  {
+    code: "MEVI_EDU_TRAINEES",
+    label: "Học viên",
+    group: "Trung tâm học tập MEVI",
+  },
+  {
+    code: "MEVI_EDU_LECTURER",
+    label: "Giảng viên",
+    group: "Trung tâm học tập MEVI",
+  },
+  {
+    code: "MEVI_FARM_ADMIN",
+    label: "Quản trị trang trại",
+    group: "Trang trại MEVI",
+  },
+  {
+    code: "MEVI_FARM_MEMBER",
+    label: "Thành viên trang trại",
+    group: "Trang trại MEVI",
+  },
+  {
+    code: "MEVI_FACTORY_ADMIN",
+    label: "Quản trị nhà máy",
+    group: "Mạng lưới nhà máy/cơ sở chế biến MEVI",
+  },
+  {
+    code: "MEVI_FACTORY_MEMBER",
+    label: "Thành viên nhà máy",
+    group: "Mạng lưới nhà máy/cơ sở chế biến MEVI",
+  },
+  {
+    code: "MEVI_SHOP_ADMIN",
+    label: "Quản trị cửa hàng",
+    group: "Trạm xanh MEVI",
+  },
+  {
+    code: "MEVI_SHOP_MEMBER",
+    label: "Thành viên cửa hàng",
+    group: "Trạm xanh MEVI",
+  },
+] as const;
+
+const selectableRoleOptions = allRoleOptions.filter(
+  (item) => item.code !== "MEVI_SUPER_ADMIN",
+);
+
+const roleCodes: string[] = allRoleOptions.map((item) => item.code);
+
+function toSearchableText(value?: string) {
+  return value?.trim().toLowerCase() ?? "";
+}
+
+function normalizePhoneSearch(value?: string) {
+  return value?.replace(/\D/g, "") ?? "";
+}
+
+function buildReferrerLabel(fullName?: string, username?: string) {
+  const name = fullName?.trim() ?? "";
+  const account = username?.trim() ?? "";
+
+  return [name, account].filter(Boolean).join(" - ");
+}
+
+export const userAccountFormSchema = z.object({
+  fullName: z.string().trim().min(1, "Vui lòng nhập họ và tên"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Vui lòng nhập email")
+    .email("Email không hợp lệ"),
+  phoneNumber: z.string().trim().min(1, "Vui lòng nhập số điện thoại"),
+  operatingArea: z.string().trim().min(1, "Vui lòng nhập khu vực hoạt động"),
+  birthYear: z
+    .string()
+    .trim()
+    .min(1, "Vui lòng nhập năm sinh")
+    .regex(/^\d{4}$/, "Năm sinh phải gồm 4 chữ số"),
+  referrerPhoneNumber: z.string().trim(),
+  audienceType: z.enum(["individual", "cooperative", "business", "other"]),
+  roles: z
+    .array(z.string().min(1))
+    .min(1, "Vui lòng chọn ít nhất một vai trò")
+    .refine(
+      (values) => values.every((value) => roleCodes.includes(value)),
+      "Vai trò không hợp lệ",
+    ),
+});
+
+export type UserAccountFormValues = z.infer<typeof userAccountFormSchema>;
 
 type UserAccountFormProps = {
   title: string;
   description: string;
   submitLabel: string;
   initialValues?: UserAccountFormValues;
-  onSubmit: (values: UserAccountFormValues) => void;
+  submitting?: boolean;
+  onSubmit: (values: UserAccountFormValues) => void | Promise<void>;
   onCancel: () => void;
 };
 
 const defaultValues: UserAccountFormValues = {
   fullName: "",
   email: "",
-  phone: "",
+  phoneNumber: "",
+  operatingArea: "",
   birthYear: "",
-  address: "",
-  referralName: "",
-  status: "active",
-  note: "",
-  platformGrants: createPlatformGrants(
-    accountPlatforms.map((item) => item.value),
-  ),
+  referrerPhoneNumber: "",
+  audienceType: "other",
+  roles: [],
 };
 
-function getMenuSelectionState(
-  node: PermissionMenuNode,
-  selectedKeys: Set<string>,
-) {
-  const leafKeys = getMenuLeafKeys(node);
-  const selectedCount = leafKeys.filter((key) => selectedKeys.has(key)).length;
-  const checked = selectedCount === leafKeys.length;
-  const indeterminate = selectedCount > 0 && selectedCount < leafKeys.length;
-
-  return { checked, indeterminate };
-}
-
-function PermissionTreeNode({
-  node,
-  selectedKeys,
-  onToggle,
-  onOpenCrud,
-  depth = 0,
-}: {
-  node: PermissionMenuNode;
-  selectedKeys: Set<string>;
-  onToggle: (node: PermissionMenuNode, checked: boolean) => void;
-  onOpenCrud: (node: PermissionMenuNode) => void;
-  depth?: number;
-}) {
-  const state = getMenuSelectionState(node, selectedKeys);
-  const hasChildren = Boolean(node.children?.length);
-
-  return (
-    <div className={depth === 0 ? "space-y-2" : "space-y-1"}>
-      <div
-        className={`flex items-center gap-3 rounded-lg px-1 py-2 transition-colors hover:bg-slate-50 ${
-          depth === 0 ? "" : "ml-1"
-        }`}
-      >
-        <Checkbox
-          checked={state.indeterminate ? "indeterminate" : state.checked}
-          onCheckedChange={(value) => onToggle(node, Boolean(value))}
-        />
-        <div className="min-w-0 flex-1 leading-6">
-          <span className="block font-medium text-slate-900">{node.label}</span>
-        </div>
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenCrud(node);
-          }}
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {hasChildren ? (
-        <div className="grid gap-x-8 gap-y-1 pl-6 sm:grid-cols-2">
-          {node.children?.map((child) => (
-            <PermissionTreeNode
-              key={child.key}
-              node={child}
-              selectedKeys={selectedKeys}
-              onToggle={onToggle}
-              onOpenCrud={onOpenCrud}
-              depth={depth + 1}
-            />
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
+function fieldErrorMessage(error?: { message?: string }) {
+  return error?.message;
 }
 
 export function UserAccountForm({
@@ -153,433 +156,332 @@ export function UserAccountForm({
   description,
   submitLabel,
   initialValues,
+  submitting = false,
   onSubmit,
   onCancel,
 }: UserAccountFormProps) {
-  const [form, setForm] = useState<UserAccountFormValues>({
-    ...defaultValues,
-    ...initialValues,
-    platformGrants:
-      initialValues?.platformGrants ?? defaultValues.platformGrants,
+  const {
+    control,
+    handleSubmit,
+    register,
+    reset,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<UserAccountFormValues>({
+    resolver: zodResolver(userAccountFormSchema),
+    defaultValues: initialValues ?? defaultValues,
+    mode: "onSubmit",
   });
-  const [activePlatform, setActivePlatform] = useState<AccountPlatform>(
-    form.platformGrants[0]?.platform ?? accountPlatforms[0].value,
-  );
-  const [crudDialogOpen, setCrudDialogOpen] = useState(false);
-  const [crudDialogPlatform, setCrudDialogPlatform] = useState<AccountPlatform>(
-    accountPlatforms[0].value,
-  );
-  const [crudDialogNode, setCrudDialogNode] =
-    useState<PermissionMenuNode | null>(null);
-  const [crudSelections, setCrudSelections] = useState<AccountPermission[]>([]);
 
-  const updateField = <K extends keyof UserAccountFormValues>(
-    key: K,
-    value: UserAccountFormValues[K],
-  ) => {
-    setForm((current) => ({ ...current, [key]: value }));
-  };
+  const referrersQuery = useReferrersQuery({
+    page: 0,
+    size: 100,
+  });
 
-  const updateGrant = (
-    platform: AccountPlatform,
-    updater: (grant: PlatformGrant) => PlatformGrant,
-  ) => {
-    setForm((current) => ({
-      ...current,
-      platformGrants: current.platformGrants.map((grant) =>
-        grant.platform === platform ? updater(grant) : grant,
-      ),
-    }));
-  };
+  useEffect(() => {
+    reset(initialValues ?? defaultValues);
+  }, [initialValues, reset]);
 
-  const handleRoleChange = (platform: AccountPlatform, role: AccountRole) => {
-    updateGrant(platform, (grant) => ({
-      ...grant,
-      role,
-      permissions: getDefaultPermissionsForRole(role),
-    }));
-  };
+  const referrerPhoneOptions = useMemo<AutoCompleteOption[]>(() => {
+    return (referrersQuery.data?.content ?? []).flatMap((item) => {
+      const username = item.username?.trim() ?? "";
+      const phoneNumber = username || item.phoneNumber?.trim() || "";
 
-  const handleNodeToggle = (
-    platform: AccountPlatform,
-    node: PermissionMenuNode,
-    checked: boolean,
-  ) => {
-    updateGrant(platform, (grant) => {
-      const nextPermissions = new Set(grant.permissions);
-      for (const key of getMenuLeafKeys(node)) {
-        if (checked) {
-          nextPermissions.add(key);
-        } else {
-          nextPermissions.delete(key);
-        }
+      if (!phoneNumber) {
+        return [];
       }
 
-      return { ...grant, permissions: Array.from(nextPermissions) };
+      const label = buildReferrerLabel(item.fullName, username || phoneNumber);
+      const fullNameTokens =
+        item.fullName?.trim().toLowerCase().split(/\s+/).filter(Boolean) ?? [];
+      const phoneDigits = normalizePhoneSearch(phoneNumber);
+
+      const option: AutoCompleteOption = {
+        value: phoneNumber,
+        label,
+        keywords: [
+          toSearchableText(item.fullName),
+          ...fullNameTokens,
+          toSearchableText(item.username),
+          toSearchableText(item.email),
+          toSearchableText(item.code),
+          phoneNumber.toLowerCase(),
+          phoneDigits,
+        ].filter(Boolean),
+      };
+
+      return [option];
     });
-  };
+  }, [referrersQuery.data?.content]);
 
-  const openCrudDialog = (
-    platform: AccountPlatform,
-    node: PermissionMenuNode,
-  ) => {
-    const grant =
-      form.platformGrants.find((item) => item.platform === platform) ??
-      form.platformGrants[0];
-
-    setCrudDialogPlatform(platform);
-    setCrudDialogNode(node);
-    setCrudSelections(
-      (grant?.menuCrud?.[node.key] ?? []) as AccountPermission[],
-    );
-    setCrudDialogOpen(true);
-  };
-
-  const saveCrudDialog = () => {
-    if (!crudDialogNode) return;
-
-    updateGrant(crudDialogPlatform, (grant) => ({
-      ...grant,
-      menuCrud: {
-        ...(grant.menuCrud ?? {}),
-        [crudDialogNode.key]: crudSelections,
-      },
-    }));
-
-    setCrudDialogOpen(false);
-    setCrudDialogNode(null);
-  };
+  const selectedRoles = watch("roles");
+  const busy = submitting || isSubmitting;
 
   return (
     <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        onSubmit(form);
-      }}
+      onSubmit={handleSubmit(async (values) => {
+        await onSubmit(values);
+      })}
       className="grid gap-5"
     >
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.96fr)]">
-        <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4">
-          <div>
-            <p className="text-sm font-semibold text-slate-900">{title}</p>
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              {description}
-            </p>
-          </div>
+      <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4">
+        <div>
+          <p className="text-sm font-semibold text-slate-900">{title}</p>
+          <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
+        </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="fullName" required>
-                Họ và tên
-              </Label>
-              <Input
-                id="fullName"
-                value={form.fullName}
-                onChange={(event) =>
-                  updateField("fullName", event.target.value)
-                }
-                placeholder="Nhập họ và tên"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email" required>
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={form.email}
-                onChange={(event) => updateField("email", event.target.value)}
-                placeholder="user@example.com"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone" required>
-                Số điện thoại
-              </Label>
-              <Input
-                id="phone"
-                value={form.phone}
-                onChange={(event) => updateField("phone", event.target.value)}
-                placeholder="0901 234 567"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="birthYear" required>
-                Năm sinh
-              </Label>
-              <Input
-                id="birthYear"
-                inputMode="numeric"
-                value={form.birthYear}
-                onChange={(event) =>
-                  updateField("birthYear", event.target.value)
-                }
-                placeholder="1995"
-              />
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="address" required>
-                Địa chỉ
-              </Label>
-              <Input
-                id="address"
-                value={form.address}
-                onChange={(event) => updateField("address", event.target.value)}
-                placeholder="Nhập địa chỉ liên hệ"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="referralName" required>
-                Người giới thiệu
-              </Label>
-              <AutoCompleteSelect
-                options={referralNameOptions}
-                value={form.referralName}
-                onChange={(value) => updateField("referralName", value)}
-                placeholder="Chọn người giới thiệu"
-                searchPlaceholder="Tìm theo người giới thiệu..."
-                emptyText="Không tìm thấy người giới thiệu"
-                clearable
-                autocomplete
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status" required>
-                Trạng thái
-              </Label>
-              <Select
-                value={form.status}
-                onValueChange={(value) =>
-                  updateField("status", value as AccountStatus)
-                }
-              >
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Chọn trạng thái" />
-                </SelectTrigger>
-                <SelectContent>
-                  {[
-                    { value: "active", label: "Hoạt động" },
-                    { value: "locked", label: "Khóa" },
-                  ].map((status) => (
-                    <SelectItem key={status.value} value={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="fullName" required>
+              Họ và tên
+            </Label>
+            <Input
+              id="fullName"
+              placeholder="Nguyễn Văn A"
+              aria-invalid={Boolean(errors.fullName)}
+              {...register("fullName")}
+            />
+            {fieldErrorMessage(errors.fullName) ? (
+              <p className="text-xs text-rose-600">
+                {errors.fullName?.message}
+              </p>
+            ) : null}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="note">Ghi chú</Label>
-            <Textarea
-              id="note"
-              value={form.note}
-              onChange={(event) => updateField("note", event.target.value)}
-              placeholder="Nhập ghi chú cho người dùng..."
-              className="min-h-32"
+            <Label htmlFor="email" required>
+              Email
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="user@example.com"
+              aria-invalid={Boolean(errors.email)}
+              {...register("email")}
             />
-          </div>
-        </section>
-
-        <section className="space-y-4 xl:sticky xl:top-6">
-          <div>
-            <p className="text-sm font-semibold text-slate-900">
-              Phân quyền theo phân hệ
-            </p>
-            <p className="text-sm leading-6 text-slate-500">
-              Mỗi tab là một phân hệ. Một tài khoản có thể giữ vai trò khác nhau
-              trên từng phân hệ.
-            </p>
+            {fieldErrorMessage(errors.email) ? (
+              <p className="text-xs text-rose-600">{errors.email?.message}</p>
+            ) : null}
           </div>
 
-          <Tabs
-            value={activePlatform}
-            onValueChange={(value) =>
-              setActivePlatform(value as AccountPlatform)
-            }
-          >
-            <TabsList>
-              {accountPlatforms.map((platform) => (
-                <TabsTrigger key={platform.value} value={platform.value}>
-                  {platform.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+          <div className="space-y-2">
+            <Label htmlFor="phoneNumber" required>
+              Số điện thoại
+            </Label>
+            <Input
+              id="phoneNumber"
+              placeholder="0885 665 919"
+              aria-invalid={Boolean(errors.phoneNumber)}
+              {...register("phoneNumber")}
+            />
+            {fieldErrorMessage(errors.phoneNumber) ? (
+              <p className="text-xs text-rose-600">
+                {errors.phoneNumber?.message}
+              </p>
+            ) : null}
+          </div>
 
-            {accountPlatforms.map((platform) => {
-              const grant =
-                form.platformGrants.find(
-                  (item) => item.platform === platform.value,
-                ) ?? form.platformGrants[0];
-              const selectedKeys = new Set(grant?.permissions ?? []);
-              const menuNodes = getPlatformPermissionMenus(platform.value);
-              const isUserRole = grant?.role === "user";
+          <div className="space-y-2">
+            <Label htmlFor="birthYear" required>
+              Năm sinh
+            </Label>
+            <Input
+              id="birthYear"
+              inputMode="numeric"
+              placeholder="1995"
+              aria-invalid={Boolean(errors.birthYear)}
+              {...register("birthYear")}
+            />
+            {fieldErrorMessage(errors.birthYear) ? (
+              <p className="text-xs text-rose-600">
+                {errors.birthYear?.message}
+              </p>
+            ) : null}
+          </div>
 
-              return (
-                <TabsContent
-                  key={platform.value}
-                  value={platform.value}
-                  className="space-y-4"
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="operatingArea" required>
+              Khu vực hoạt động
+            </Label>
+            <Input
+              id="operatingArea"
+              placeholder="TP. Hồ Chí Minh"
+              aria-invalid={Boolean(errors.operatingArea)}
+              {...register("operatingArea")}
+            />
+            {fieldErrorMessage(errors.operatingArea) ? (
+              <p className="text-xs text-rose-600">
+                {errors.operatingArea?.message}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="audienceType" required>
+              Loại đối tượng
+            </Label>
+            <Controller
+              control={control}
+              name="audienceType"
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={(value) =>
+                    field.onChange(value as AdminUserAudienceType)
+                  }
                 >
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold text-slate-900">
-                      {getPlatformLabel(platform.value)}
-                    </p>
-                  <p className="text-sm leading-6 text-slate-500">
-                      Chọn vai trò và nhóm quyền cha/con cho phân hệ này.
-                    </p>
-                  </div>
+                  <SelectTrigger id="audienceType">
+                    <SelectValue placeholder="Chọn loại đối tượng" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {audienceTypeOptions.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {fieldErrorMessage(errors.audienceType) ? (
+              <p className="text-xs text-rose-600">
+                {errors.audienceType?.message}
+              </p>
+            ) : null}
+          </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor={`role-${platform.value}`} required>
-                      Vai trò
-                    </Label>
-                    <Select
-                      value={grant?.role}
-                      onValueChange={(value) =>
-                        handleRoleChange(platform.value, value as AccountRole)
-                      }
-                    >
-                      <SelectTrigger id={`role-${platform.value}`}>
-                        <SelectValue placeholder="Chọn vai trò" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {accountRoles.map((role) => (
-                          <SelectItem key={role.value} value={role.value}>
-                            {role.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+          <div className="space-y-2">
+            <Label htmlFor="referrerPhoneNumber">
+              Số điện thoại người giới thiệu
+            </Label>
+            <Controller
+              control={control}
+              name="referrerPhoneNumber"
+              render={({ field }) => (
+                <AutoCompleteSelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={referrerPhoneOptions}
+                  placeholder="Chọn số điện thoại người giới thiệu"
+                  searchPlaceholder="Tìm theo tên hoặc số điện thoại..."
+                  emptyText="Không tìm thấy số điện thoại"
+                  clearable
+                  autocomplete
+                  disabled={
+                    referrersQuery.isPending || referrersQuery.isFetching
+                  }
+                />
+              )}
+            />
+            {fieldErrorMessage(errors.referrerPhoneNumber) ? (
+              <p className="text-xs text-rose-600">
+                {errors.referrerPhoneNumber?.message}
+              </p>
+            ) : null}
+          </div>
+        </div>
 
-                  {isUserRole ? (
-                    <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-500">
-                      Vai trò Người dùng không cần thiết lập quyền chi tiết.
+        <div className="space-y-2">
+          <Label required>Vai trò</Label>
+          <Controller
+            control={control}
+            name="roles"
+            render={({ field }) => (
+              <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                {[
+                  "Hệ thống",
+                  "Trung tâm học tập MEVI",
+                  "Trang trại MEVI",
+                  "Mạng lưới nhà máy/cơ sở chế biến MEVI",
+                  "Trạm xanh MEVI",
+                ].map((group) => {
+                  const groupRoles = selectableRoleOptions.filter(
+                    (item) => item.group === group,
+                  );
+
+                  return (
+                    <div key={group} className="space-y-2">
+                      <p className="text-sm font-semibold text-slate-900">
+                        {group}
+                      </p>
+                      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                        {groupRoles.map((role) => {
+                          const checked = field.value.includes(role.code);
+
+                          return (
+                            <label
+                              key={role.code}
+                              className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 transition-colors hover:border-slate-300"
+                            >
+                              <input
+                                type="checkbox"
+                                className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                checked={checked}
+                                onChange={(event) => {
+                                  const next = event.target.checked
+                                    ? Array.from(
+                                        new Set([...field.value, role.code]),
+                                      )
+                                    : field.value.filter(
+                                        (item) => item !== role.code,
+                                      );
+                                  field.onChange(next);
+                                }}
+                              />
+                              <span className="min-w-0">
+                                <span className="block text-sm font-medium text-slate-900">
+                                  {role.label}
+                                </span>
+                                <span className="block text-xs text-slate-500">
+                                  {role.code}
+                                </span>
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
                     </div>
-                  ) : (
-                    <div className="max-h-[340px] space-y-3 overflow-y-auto pr-1">
-                      {menuNodes.map((node) => (
-                        <div
-                          key={node.key}
-                          className="border-t border-slate-100 pt-3 first:border-t-0 first:pt-0"
-                        >
-                          <PermissionTreeNode
-                            node={node}
-                            selectedKeys={selectedKeys}
-                            onToggle={(currentNode, checked) =>
-                              handleNodeToggle(
-                                platform.value,
-                                currentNode,
-                                checked,
-                              )
-                            }
-                            onOpenCrud={(currentNode) =>
-                              openCrudDialog(platform.value, currentNode)
-                            }
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-              );
-            })}
-          </Tabs>
-        </section>
-      </div>
-
-      <div className="flex flex-wrap justify-end gap-2 border-t border-black/5 pt-4">
-        <Button variant="outline" type="button" onClick={onCancel}>
-          Hủy
-        </Button>
-        <Button type="submit">{submitLabel}</Button>
-      </div>
-
-      <Dialog
-        open={crudDialogOpen}
-        onOpenChange={(open) => {
-          setCrudDialogOpen(open);
-          if (!open) {
-            setCrudDialogNode(null);
-            setCrudSelections([]);
-          }
-        }}
-      >
-        <DialogContent className="max-w-lg">
-          <DialogHeader className="space-y-2">
-            <DialogTitle className="text-xl font-semibold tracking-[-0.03em] text-slate-900">
-              Thiết lập quyền cho menu
-            </DialogTitle>
-            <DialogDescription className="text-sm leading-6 text-slate-500">
-              {crudDialogNode
-                ? `Chọn các quyền thao tác cho mục "${crudDialogNode.label}".`
-                : "Chọn các quyền thao tác cho menu đang mở."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
-              Phân hệ:{" "}
-              <span className="font-semibold text-slate-900">
-                {getPlatformLabel(crudDialogPlatform)}
-              </span>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              {accountPermissions.map((permission) => {
-                const checked = crudSelections.includes(permission.value);
-
+                  );
+                })}
+              </div>
+            )}
+          />
+          {fieldErrorMessage(errors.roles) ? (
+            <p className="text-xs text-rose-600">{errors.roles?.message}</p>
+          ) : null}
+          {selectedRoles.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {selectedRoles.map((role) => {
+                const matched = allRoleOptions.find(
+                  (item) => item.code === role,
+                );
                 return (
-                  <label
-                    key={permission.value}
-                    className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-2"
+                  <span
+                    key={role}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700"
                   >
-                    <Checkbox
-                      checked={checked}
-                      onCheckedChange={(value) => {
-                        setCrudSelections((current) =>
-                          value
-                            ? Array.from(
-                                new Set([...current, permission.value]),
-                              )
-                            : current.filter(
-                                (item) => item !== permission.value,
-                              ),
-                        );
-                      }}
-                    />
-                    <span className="text-sm font-medium text-slate-900">
-                      {permission.label}
-                    </span>
-                  </label>
+                    {matched?.label ?? role}
+                  </span>
                 );
               })}
             </div>
-          </div>
+          ) : null}
+        </div>
+      </section>
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              type="button"
-              onClick={() => setCrudDialogOpen(false)}
-            >
-              Hủy
-            </Button>
-            <Button type="button" onClick={saveCrudDialog}>
-              Lưu quyền
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <div className="flex flex-wrap justify-end gap-2 border-t border-black/5 pt-4">
+        <Button
+          variant="outline"
+          type="button"
+          onClick={onCancel}
+          disabled={busy}
+        >
+          Hủy
+        </Button>
+        <Button type="submit" disabled={busy}>
+          {submitLabel}
+        </Button>
+      </div>
     </form>
   );
 }
