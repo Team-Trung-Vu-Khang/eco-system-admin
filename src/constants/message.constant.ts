@@ -21,6 +21,25 @@ export const API_MESSAGE_KEY = {
   },
 } as const;
 
+const API_MESSAGE_TEXT: Record<string, string> = {
+  [API_MESSAGE_KEY.COMMON.SUCCESS]: "Thành công",
+  [API_MESSAGE_KEY.COMMON.BAD_REQUEST]: "Yêu cầu không hợp lệ",
+  [API_MESSAGE_KEY.COMMON.VALIDATION_FAILED]: "Dữ liệu không hợp lệ",
+  [API_MESSAGE_KEY.COMMON.UNAUTHORIZED]: "Bạn chưa đăng nhập",
+  [API_MESSAGE_KEY.COMMON.FORBIDDEN]: "Bạn không có quyền thực hiện thao tác này",
+  [API_MESSAGE_KEY.COMMON.NOT_FOUND]: "Không tìm thấy dữ liệu",
+  [API_MESSAGE_KEY.COMMON.CONFLICT]: "Dữ liệu đã tồn tại",
+  [API_MESSAGE_KEY.COMMON.TOO_MANY_REQUESTS]: "Bạn thao tác quá nhanh",
+  [API_MESSAGE_KEY.COMMON.INTERNAL_ERROR]: "Đã có lỗi hệ thống",
+  [API_MESSAGE_KEY.VALIDATION.REQUIRED]: "Trường này là bắt buộc",
+  [API_MESSAGE_KEY.VALIDATION.INVALID_FORMAT]: "Định dạng không hợp lệ",
+  [API_MESSAGE_KEY.VALIDATION.OUT_OF_RANGE]: "Giá trị nằm ngoài phạm vi cho phép",
+  [API_MESSAGE_KEY.VALIDATION.NOT_FOUND]: "Không tìm thấy dữ liệu",
+  [API_MESSAGE_KEY.VALIDATION.INACTIVE]: "Dữ liệu đang không hoạt động",
+  [API_MESSAGE_KEY.VALIDATION.INVALID]: "Dữ liệu không hợp lệ",
+  [API_MESSAGE_KEY.VALIDATION.DUPLICATE]: "Dữ liệu bị trùng lặp",
+};
+
 export type FeatureKey = "users" | "referrers" | "provinces";
 
 const FEATURE_LABEL: Record<FeatureKey, string> = {
@@ -54,4 +73,12 @@ export function getFeatureMessage(
 
 export function getFeatureDuplicateMessage(feature: FeatureKey) {
   return getFeatureMessage(feature, "duplicate");
+}
+
+export function getApiMessageText(messageKey?: string) {
+  if (!messageKey) {
+    return "";
+  }
+
+  return API_MESSAGE_TEXT[messageKey.trim()] ?? "";
 }

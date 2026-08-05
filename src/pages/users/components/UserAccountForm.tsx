@@ -30,6 +30,11 @@ const allRoleOptions = [
     label: "Quản trị tổng",
     group: "Hệ thống",
   },
+  {
+    code: "MEVI_REFERRER",
+    label: "Người giới thiệu",
+    group: "Hệ thống",
+  },
   { code: "MEVI_ADMIN", label: "Quản trị hệ thống", group: "Hệ thống" },
   {
     code: "MEVI_EDU_ADMIN",
@@ -79,7 +84,7 @@ const allRoleOptions = [
 ] as const;
 
 const selectableRoleOptions = allRoleOptions.filter(
-  (item) => item.code !== "MEVI_SUPER_ADMIN",
+  (item) => item.code !== "MEVI_SUPER_ADMIN" && item.code !== "MEVI_REFERRER",
 );
 
 const roleCodes: string[] = allRoleOptions.map((item) => item.code);

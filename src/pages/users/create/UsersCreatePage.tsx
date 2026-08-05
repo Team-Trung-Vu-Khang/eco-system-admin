@@ -1,15 +1,17 @@
 import { useLocation } from "wouter";
 import { ArrowLeft, UserPlus } from "lucide-react";
-import { Button } from "@Team-Trung-Vu-Khang/eco-shared-ui";
+import { Button, useToast } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import { useCreateUserMutation } from "@/api/users/users.hooks";
 import {
   UserAccountForm,
   type UserAccountFormValues,
 } from "../components/UserAccountForm";
 import type { AdminCreateUserRequest } from "@/api/users/users.request";
+import { getApiErrorDescription } from "@/lib/api-error";
 
 export function UsersCreatePage() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const createUserMutation = useCreateUserMutation();
   const initialValues: UserAccountFormValues = {
     fullName: "",
@@ -38,9 +40,23 @@ export function UsersCreatePage() {
 
     try {
       await createUserMutation.mutateAsync(payload);
+      toast({
+        title: "Tạo tài khoản thành công",
+        description: "Tài khoản mới đã được thêm vào hệ thống.",
+        duration: 2000,
+      });
       setLocation("/users");
-    } catch {
-      // Keep the form open so the user can correct and retry.
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Không thể tạo tài khoản",
+        description: getApiErrorDescription(
+          error,
+          "Vui lòng kiểm tra lại thông tin và thử lại.",
+        ),
+        variant: "destructive",
+        duration: 2000,
+      });
     }
   };
 
