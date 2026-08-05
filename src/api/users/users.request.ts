@@ -16,9 +16,7 @@ export type GetUsersRequest = {
   size?: number;
 };
 
-export function buildUsersParams(
-  query: GetUsersRequest = {},
-): ApiQueryParams {
+export function buildUsersParams(query: GetUsersRequest = {}): ApiQueryParams {
   return {
     businessGroup: query.businessGroup,
     status: query.status?.trim() || undefined,
@@ -60,7 +58,7 @@ export type ResetDefaultPasswordRequest = {
 
 export type SetUserReferrerRequest = {
   userId: number | string;
-  referrerPhoneNumber: string;
+  referrerPhoneNumber?: string;
 };
 
 export type AssignUserRoleRequest = {
