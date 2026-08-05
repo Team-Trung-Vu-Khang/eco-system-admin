@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import {
   Badge,
   Tooltip,
@@ -41,6 +42,16 @@ function toText(value: string | number | boolean | null | undefined) {
   return value == null ? "" : String(value);
 }
 
+function formatDateTime(value: string) {
+  const date = dayjs(value);
+
+  if (!date.isValid()) {
+    return value;
+  }
+
+  return date.format("DD/MM/YYYY HH:mm");
+}
+
 function getRoleLabel(roleCode: string) {
   return roleLabelMap[roleCode] ?? roleCode;
 }
@@ -59,7 +70,7 @@ export function mapUserItemToRow(item: UserItem): UserListRow {
       : [],
     status: toText(item.status),
     mustChangePassword: Boolean(item.mustChangePassword),
-    createdAt: toText(item.createdAt),
+    createdAt: formatDateTime(toText(item.createdAt)),
   };
 }
 

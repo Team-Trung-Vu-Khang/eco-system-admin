@@ -10,10 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@Team-Trung-Vu-Khang/eco-shared-ui": "^0.0.6-beta.54",
     "@hookform/resolvers": "^5.5.7",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query": "^5.101.4",
+    "@Team-Trung-Vu-Khang/eco-shared-ui": "^0.0.6-beta.54",
+    "dayjs": "^1.11.21",
     "lucide-react": "^1.28.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
