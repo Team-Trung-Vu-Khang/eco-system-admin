@@ -29,8 +29,9 @@ attachApiResponseMiddleware(client);
 
 async function request<TResponse>(
   path: string,
-  init: (ApiClientRequestOptions & { method?: AxiosRequestConfig["method"] }) =
-    {},
+  init: ApiClientRequestOptions & {
+    method?: AxiosRequestConfig["method"];
+  } = {},
 ) {
   const response = await client.request<TResponse>({
     url: path,
@@ -46,7 +47,9 @@ async function request<TResponse>(
     maxContentLength: init.maxContentLength,
     onDownloadProgress: init.onDownloadProgress,
     onUploadProgress: init.onUploadProgress,
-    validateStatus: init.validateStatus,
+    ...(init.validateStatus !== undefined && {
+      validateStatus: init.validateStatus,
+    }),
   });
 
   if (response.status < 200 || response.status >= 300) {
