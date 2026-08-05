@@ -111,7 +111,11 @@ export const userAccountFormSchema = z.object({
     .trim()
     .min(1, "Vui lòng nhập email")
     .email("Email không hợp lệ"),
-  phoneNumber: z.string().trim().min(1, "Vui lòng nhập số điện thoại"),
+  phoneNumber: z
+    .string()
+    .trim()
+    .min(1, "Vui lòng nhập số điện thoại")
+    .regex(/^(?:\+?84|0)(3|5|7|8|9)\d{8}$/, "Số điện thoại không hợp lệ"),
   operatingArea: z.string().trim().min(1, "Vui lòng nhập khu vực hoạt động"),
   birthYear: z
     .string()

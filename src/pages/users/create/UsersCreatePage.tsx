@@ -94,7 +94,9 @@ export function UsersCreatePage() {
       <UserAccountForm
         title="Thông tin tài khoản"
         description="Bổ sung thông tin người dùng cho từng phân hệ. Nếu thiếu thông tin định danh, hệ thống cần được cập nhật ngay khi tạo mới."
-        submitLabel={createUserMutation.isPending ? "Đang tạo..." : "Tạo tài khoản"}
+        submitLabel={
+          createUserMutation.isPending ? "Đang tạo..." : "Tạo tài khoản"
+        }
         initialValues={initialValues}
         submitting={createUserMutation.isPending}
         onSubmit={handleSubmit}
