@@ -1,6 +1,19 @@
+import { useMemo, useState } from "react";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { useLocation, useParams } from "wouter";
-import { Button, useToast } from "@Team-Trung-Vu-Khang/eco-shared-ui";
+import {
+  Button,
+  useToast,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  cn,
+} from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import {
   useUpdateUserMutation,
   useUpdateUserStatusMutation,
@@ -37,6 +50,7 @@ export function UsersEditPage() {
   const userQuery = useUserQuery(resolvedUserId);
   const updateUserMutation = useUpdateUserMutation();
   const updateStatusMutation = useUpdateUserStatusMutation();
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   if (resolvedUserId === null) {
     return (
@@ -66,9 +80,10 @@ export function UsersEditPage() {
     );
   }
 
-  const initialValues = userQuery.data
-    ? mapUserDetailToFormValues(userQuery.data)
-    : null;
+  const initialValues = useMemo(
+    () => (userQuery.data ? mapUserDetailToFormValues(userQuery.data) : null),
+    [userQuery.data],
+  );
 
   if (userQuery.isPending) {
     return (
@@ -148,51 +163,85 @@ export function UsersEditPage() {
           </Button>
 
           {userQuery.data ? (
-            <Button
-              variant={
-                userQuery.data.status === "active" ? "destructive" : "secondary"
-              }
-              type="button"
-              disabled={updateStatusMutation.isPending}
-              onClick={async () => {
-                const isLocking = userQuery.data.status === "active";
-                if (
-                  !window.confirm(
-                    isLocking
-                      ? "Bạn có chắc chắn muốn khóa tài khoản này không?"
-                      : "Bạn có chắc chắn muốn mở khóa tài khoản này không?",
-                  )
-                )
-                  return;
-                try {
-                  await updateStatusMutation.mutateAsync({
-                    userId: resolvedUserId,
-                    status: isLocking ? "inactive" : "active",
-                  });
-                  toast({
-                    title: isLocking
-                      ? "Đã khóa tài khoản"
-                      : "Đã mở khóa tài khoản",
-                    duration: 2000,
-                  });
-                } catch (error) {
-                  console.error(error);
-                  toast({
-                    title: "Lỗi cập nhật trạng thái",
-                    description: getApiErrorDescription(
-                      error,
-                      "Không thể cập nhật trạng thái tài khoản.",
-                    ),
-                    variant: "destructive",
-                    duration: 2000,
-                  });
+            <>
+              <Button
+                variant={
+                  userQuery.data.status === "active"
+                    ? "destructive"
+                    : "secondary"
                 }
-              }}
-            >
-              {userQuery.data.status === "active"
-                ? "Khóa tài khoản"
-                : "Mở tài khoản"}
-            </Button>
+                type="button"
+                disabled={updateStatusMutation.isPending}
+                onClick={() => setIsConfirmOpen(true)}
+              >
+                {userQuery.data.status === "active"
+                  ? "Khóa tài khoản"
+                  : "Mở tài khoản"}
+              </Button>
+
+              <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      {userQuery.data.status === "active"
+                        ? "Khóa tài khoản"
+                        : "Mở tài khoản"}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {userQuery.data.status === "active"
+                        ? "Bạn có chắc chắn muốn khóa tài khoản này không? Hành động này sẽ hủy mọi phiên đăng nhập hiện tại của người dùng."
+                        : "Bạn có chắc chắn muốn mở khóa tài khoản này không?"}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel
+                      disabled={updateStatusMutation.isPending}
+                    >
+                      Hủy
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      className={cn(
+                        "border-0",
+                        userQuery.data.status === "active"
+                          ? "bg-red-500 hover:bg-red-600 hover:text-white"
+                          : undefined,
+                      )}
+                      disabled={updateStatusMutation.isPending}
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        const isLocking = userQuery.data.status === "active";
+                        try {
+                          await updateStatusMutation.mutateAsync({
+                            userId: resolvedUserId!,
+                            status: isLocking ? "inactive" : "active",
+                          });
+                          toast({
+                            title: isLocking
+                              ? "Đã khóa tài khoản"
+                              : "Đã mở khóa tài khoản",
+                            duration: 2000,
+                          });
+                          setIsConfirmOpen(false);
+                        } catch (error) {
+                          console.error(error);
+                          toast({
+                            title: "Lỗi cập nhật trạng thái",
+                            description: getApiErrorDescription(
+                              error,
+                              "Không thể cập nhật trạng thái tài khoản.",
+                            ),
+                            variant: "destructive",
+                            duration: 2000,
+                          });
+                        }
+                      }}
+                    >
+                      Xác nhận
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
           ) : null}
         </div>
       </div>
@@ -219,10 +268,9 @@ export function UsersEditPage() {
 
             toast({
               title: "Cập nhật tài khoản thành công",
-              description: "Khu vực hoạt động đã được lưu lại.",
+              description: "Thông tin tài khoản đã được lưu lại.",
               duration: 2000,
             });
-            setLocation("/users");
           } catch (error) {
             console.error(error);
             toast({
