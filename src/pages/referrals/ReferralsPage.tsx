@@ -1,10 +1,4 @@
-import {
-  useDeferredValue,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@Team-Trung-Vu-Khang/eco-shared-ui";
@@ -36,7 +30,9 @@ export function ReferralsPage() {
   const { toast } = useToast();
   const [uploadOpen, setUploadOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [selectedReferral, setSelectedReferral] = useState<ReferralRow | null>(null);
+  const [selectedReferral, setSelectedReferral] = useState<ReferralRow | null>(
+    null,
+  );
   const [uploadText, setUploadText] = useState("");
   const [uploadFileName, setUploadFileName] = useState("");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -47,13 +43,19 @@ export function ReferralsPage() {
   const [pageSize, setPageSize] = useState(10);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "inactive"
+  >("all");
   const [statusOpen, setStatusOpen] = useState(false);
   const [selectedStatusReferral, setSelectedStatusReferral] =
     useState<ReferralRow | null>(null);
   const deferredSearchTerm = useDeferredValue(searchTerm);
+  const apiStatusFilter =
+    statusFilter === "all" ? undefined : statusFilter || undefined;
   const appliedUploadJobIdRef = useRef<number | null>(null);
   const referrersQuery = useReferrersQuery({
     keyword: deferredSearchTerm,
+    status: apiStatusFilter,
     page: currentIndex,
     size: pageSize,
   });
@@ -64,8 +66,7 @@ export function ReferralsPage() {
     uploadJobId ? { jobExecutionId: uploadJobId } : null,
   );
   const referrals = useMemo(
-    () =>
-      referrersQuery.data?.content?.map(mapReferrerToReferralRow) ?? [],
+    () => referrersQuery.data?.content?.map(mapReferrerToReferralRow) ?? [],
     [referrersQuery.data?.content],
   );
 
@@ -83,6 +84,19 @@ export function ReferralsPage() {
     bulkUploadMutation.isPending || uploadJob?.status === "STARTED";
   const listLoading = referrersQuery.isPending || referrersQuery.isFetching;
   const tableIndex = currentIndex + 1;
+  const filters = useMemo(
+    () => [
+      {
+        key: "statusValue",
+        label: "Trạng thái",
+        options: [
+          { label: "Hoạt động", value: "active" },
+          { label: "Không hoạt động", value: "inactive" },
+        ],
+      },
+    ],
+    [],
+  );
 
   const openCreate = () => {
     setLocation("/referrals/create");
@@ -101,6 +115,15 @@ export function ReferralsPage() {
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     setCurrentIndex(0);
+  };
+
+  const handleFilterChange = (key: string, value: string) => {
+    if (key === "statusValue") {
+      if (value === "all" || value === "active" || value === "inactive") {
+        setStatusFilter(value);
+      }
+      setCurrentIndex(0);
+    }
   };
 
   const submitUpload = async () => {
@@ -184,6 +207,8 @@ export function ReferralsPage() {
         totalElements={referrersQuery.data?.totalElements ?? 0}
         totalPages={referrersQuery.data?.totalPages ?? 1}
         onSearch={handleSearch}
+        filters={filters}
+        onFilterChange={handleFilterChange}
         onPageSize={setPageSize}
         onIndexChange={(value) => setCurrentIndex(Math.max(0, value - 1))}
         loading={listLoading}

@@ -3,6 +3,7 @@ import {
   formatNow,
   initialReferralFormValues,
   normalizePhoneTo84,
+  normalizeReferralStatusValue,
   referralStorageKey,
   seedReferrals,
   type ReferralFormValues,
@@ -31,6 +32,10 @@ function readReferrals() {
       status: validReferralStatuses.includes(referral.status as ReferralStatus)
         ? (referral.status as ReferralStatus)
         : "Hoạt động",
+      statusValue:
+        referral.statusValue === "active" || referral.statusValue === "inactive"
+          ? referral.statusValue
+          : normalizeReferralStatusValue(referral.status),
       updatedAt: referral.updatedAt,
     }))
   } catch {
@@ -77,6 +82,7 @@ export function useReferralsStore() {
       province: values.province.trim(),
       commune: values.commune?.trim() ?? "",
       status: values.status,
+      statusValue: normalizeReferralStatusValue(values.status),
       updatedAt: formatNow(),
     }
 
@@ -90,15 +96,16 @@ export function useReferralsStore() {
     setReferrals((current) =>
       current.map((referral) =>
         referral.id === id
-          ? {
-              ...referral,
-              phone: normalizedPhone,
-              fullName: values.fullName.trim(),
-              province: values.province.trim(),
-              commune: values.commune?.trim() ?? "",
-              status: values.status,
-              updatedAt: formatNow(),
-            }
+            ? {
+                ...referral,
+                phone: normalizedPhone,
+                fullName: values.fullName.trim(),
+                province: values.province.trim(),
+                commune: values.commune?.trim() ?? "",
+                status: values.status,
+                statusValue: normalizeReferralStatusValue(values.status),
+                updatedAt: formatNow(),
+              }
           : referral,
       ),
     )
@@ -124,6 +131,7 @@ export function useReferralsStore() {
           province: value.province.trim(),
           commune: value.commune?.trim() ?? "",
           status: value.status || "Hoạt động",
+          statusValue: normalizeReferralStatusValue(value.status || "Hoạt động"),
           updatedAt: formatNow(),
         }
 

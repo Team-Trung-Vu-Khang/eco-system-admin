@@ -21,6 +21,12 @@ type ReferralListTableProps = {
   totalPages: number;
   loading: boolean;
   onSearch: (value: string) => void;
+  filters?: {
+    key: string;
+    label: string;
+    options: { label: string; value: string }[];
+  }[];
+  onFilterChange?: (key: string, value: string) => void;
   onPageSize: (value: number) => void;
   onIndexChange: (value: number) => void;
   onEdit?: (row: ReferralRow) => void;
@@ -35,6 +41,8 @@ export function ReferralListTable({
   totalPages,
   loading,
   onSearch,
+  filters,
+  onFilterChange,
   onPageSize,
   onIndexChange,
   onEdit,
@@ -101,6 +109,8 @@ export function ReferralListTable({
       data={data}
       searchable
       searchPlaceholder="Tìm kiếm theo số điện thoại, tên, tỉnh..."
+      filters={filters}
+      onFilterChange={onFilterChange}
       selectable={false}
       loading={loading}
       pageSize={pageSize}
