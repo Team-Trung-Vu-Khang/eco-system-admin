@@ -33,6 +33,8 @@ export type AdminCreateUserRequest = {
   operatingArea: string;
   birthYear: number;
   referrerPhoneNumber?: string;
+  province?: string;
+  commune?: string;
   roles: string[];
   audienceType: AdminUserAudienceType;
 };

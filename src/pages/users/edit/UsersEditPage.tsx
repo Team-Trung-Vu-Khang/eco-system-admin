@@ -36,6 +36,8 @@ function mapUserDetailToFormValues(
     operatingArea: user.operatingArea ?? "",
     birthYear: String(user.birthYear),
     referrerPhoneNumber: user.referrer?.phoneNumber ?? "",
+    province: user.province ?? "",
+    commune: user.commune ?? "",
     audienceType: user.audienceType ?? "other",
     roles: user.roleCodes,
   };
@@ -262,6 +264,8 @@ export function UsersEditPage() {
               fullName: values.fullName,
               email: values.email || null,
               operatingArea: values.operatingArea || null,
+              province: values.province || null,
+              commune: values.commune || null,
               birthYear: values.birthYear ? Number(values.birthYear) : null,
               audienceType: values.audienceType || null,
             });

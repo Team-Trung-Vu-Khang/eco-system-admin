@@ -20,6 +20,8 @@ export function UsersCreatePage() {
     operatingArea: "",
     birthYear: "",
     referrerPhoneNumber: "",
+    province: "",
+    commune: "",
     audienceType: "other",
     roles: [],
   };
@@ -33,9 +35,11 @@ export function UsersCreatePage() {
       birthYear: Number(values.birthYear),
       roles: values.roles,
       audienceType: values.audienceType,
-      ...(values.referrerPhoneNumber.trim()
+      ...(values.referrerPhoneNumber?.trim()
         ? { referrerPhoneNumber: values.referrerPhoneNumber.trim() }
         : {}),
+      ...(values.province?.trim() ? { province: values.province.trim() } : {}),
+      ...(values.commune?.trim() ? { commune: values.commune.trim() } : {}),
     };
 
     try {

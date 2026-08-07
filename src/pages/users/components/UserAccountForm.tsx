@@ -15,6 +15,8 @@ import {
 } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import type { AutoCompleteOption } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import { useReferrersQuery } from "@/api/referrers/referrers.hooks";
+import { useProvincesQuery } from "@/api/provinces/provinces.hooks";
+import { useWardsQuery } from "@/api/wards/wards.hooks";
 import type { AdminUserAudienceType } from "@/api/users/users.request";
 
 const audienceTypeOptions = [
@@ -122,7 +124,9 @@ export const userAccountFormSchema = z.object({
     .trim()
     .min(1, "Vui lòng nhập năm sinh")
     .regex(/^\d{4}$/, "Năm sinh phải gồm 4 chữ số"),
-  referrerPhoneNumber: z.string().trim(),
+  referrerPhoneNumber: z.string().trim().optional(),
+  province: z.string().trim().optional(),
+  commune: z.string().trim().optional(),
   audienceType: z.enum(["individual", "cooperative", "business", "other"]),
   roles: z
     .array(z.string().min(1))
@@ -153,6 +157,8 @@ const defaultValues: UserAccountFormValues = {
   operatingArea: "",
   birthYear: "",
   referrerPhoneNumber: "",
+  province: "",
+  commune: "",
   audienceType: "other",
   roles: [],
 };
@@ -185,6 +191,24 @@ export function UserAccountForm({
   });
 
   const referrersQuery = useReferrersQuery({
+    page: 0,
+    size: 100,
+  });
+
+  const provincesQuery = useProvincesQuery({
+    page: 0,
+    size: 100,
+  });
+
+  const selectedProvinceName = watch("province");
+  const selectedProvinceCode = useMemo(() => {
+    return provincesQuery.data?.content.find(
+      (p) => p.name === selectedProvinceName,
+    )?.code;
+  }, [provincesQuery.data?.content, selectedProvinceName]);
+
+  const wardsQuery = useWardsQuery({
+    provinceCode: selectedProvinceCode || "",
     page: 0,
     size: 100,
   });
@@ -224,6 +248,22 @@ export function UserAccountForm({
       return [option];
     });
   }, [referrersQuery.data?.content]);
+
+  const provinceOptions = useMemo<AutoCompleteOption[]>(() => {
+    return (provincesQuery.data?.content ?? []).map((item) => ({
+      value: item.name,
+      label: item.name,
+      keywords: [toSearchableText(item.name), toSearchableText(item.fullName)],
+    }));
+  }, [provincesQuery.data?.content]);
+
+  const wardOptions = useMemo<AutoCompleteOption[]>(() => {
+    return (wardsQuery.data?.content ?? []).map((item) => ({
+      value: item.name,
+      label: item.name,
+      keywords: [toSearchableText(item.name), toSearchableText(item.fullName)],
+    }));
+  }, [wardsQuery.data?.content]);
 
   const selectedRoles = watch("roles");
   const busy = submitting || isSubmitting;
@@ -325,6 +365,64 @@ export function UserAccountForm({
               <p className="text-xs text-rose-600">
                 {errors.operatingArea?.message}
               </p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="province">Tỉnh/Thành phố</Label>
+            <Controller
+              control={control}
+              name="province"
+              render={({ field }) => (
+                <AutoCompleteSelect
+                  value={field.value}
+                  onChange={(val) => {
+                    field.onChange(val);
+                    if (val !== selectedProvinceName) {
+                      const currentValues = watch();
+                      reset({ ...currentValues, province: val, commune: "" });
+                    }
+                  }}
+                  options={provinceOptions}
+                  placeholder="Chọn Tỉnh/Thành phố"
+                  searchPlaceholder="Tìm tỉnh/thành phố..."
+                  emptyText="Không tìm thấy Tỉnh/Thành phố"
+                  clearable
+                  autocomplete
+                  disabled={provincesQuery.isPending || busy}
+                />
+              )}
+            />
+            {fieldErrorMessage(errors.province) ? (
+              <p className="text-xs text-rose-600">
+                {errors.province?.message}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="commune">Phường/Xã</Label>
+            <Controller
+              control={control}
+              name="commune"
+              render={({ field }) => (
+                <AutoCompleteSelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={wardOptions}
+                  placeholder="Chọn Phường/Xã"
+                  searchPlaceholder="Tìm phường/xã..."
+                  emptyText="Không tìm thấy Phường/Xã"
+                  clearable
+                  autocomplete
+                  disabled={
+                    !selectedProvinceCode || wardsQuery.isPending || busy
+                  }
+                />
+              )}
+            />
+            {fieldErrorMessage(errors.commune) ? (
+              <p className="text-xs text-rose-600">{errors.commune?.message}</p>
             ) : null}
           </div>
 
