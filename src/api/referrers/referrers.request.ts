@@ -1,5 +1,6 @@
 export type GetReferrersRequest = {
   keyword?: string;
+  status?: "active" | "inactive";
   page?: number;
   size?: number;
 };

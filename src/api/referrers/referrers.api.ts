@@ -18,6 +18,7 @@ function buildReferrerListParams(
 ): ApiQueryParams {
   return {
     keyword: query.keyword?.trim() || undefined,
+    status: query.status?.trim() || undefined,
     page: query.page,
     size: query.size,
   };

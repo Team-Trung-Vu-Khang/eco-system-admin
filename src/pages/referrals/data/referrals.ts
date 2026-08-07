@@ -11,6 +11,7 @@ export type ReferralRow = {
   province: string;
   commune: string;
   status: ReferralStatus;
+  statusValue: "active" | "inactive";
   updatedAt: string;
 };
 
@@ -63,6 +64,7 @@ export const seedReferrals: ReferralRow[] = [
     province: "TP. Hồ Chí Minh",
     commune: "Quận 1",
     status: "Hoạt động",
+    statusValue: "active",
     updatedAt: "01/08/2026 08:10",
   },
   {
@@ -72,6 +74,7 @@ export const seedReferrals: ReferralRow[] = [
     province: "Hà Nội",
     commune: "Ba Đình",
     status: "Hoạt động",
+    statusValue: "active",
     updatedAt: "01/08/2026 09:25",
   },
   {
@@ -81,6 +84,7 @@ export const seedReferrals: ReferralRow[] = [
     province: "Đồng Nai",
     commune: "Biên Hòa",
     status: "Không hoạt động",
+    statusValue: "inactive",
     updatedAt: "31/07/2026 17:44",
   },
 ];
@@ -310,6 +314,14 @@ export function normalizeReferralStatus(value: string): ReferralStatus {
     : "Không hoạt động";
 }
 
+export function normalizeReferralStatusValue(value: string): "active" | "inactive" {
+  const normalized = value.trim().toLowerCase();
+
+  return normalized.includes("hoạt động") || normalized === "active"
+    ? "active"
+    : "inactive";
+}
+
 export function mapReferrerToReferralRow(item: ReferrerListItem): ReferralRow {
   return {
     id: String(item.id),
@@ -318,6 +330,7 @@ export function mapReferrerToReferralRow(item: ReferrerListItem): ReferralRow {
     province: item?.province || "",
     commune: item?.commune || "",
     status: normalizeReferralStatus(item.status),
+    statusValue: normalizeReferralStatusValue(item.status),
     updatedAt: formatDateTime(item.createdAt),
   };
 }
