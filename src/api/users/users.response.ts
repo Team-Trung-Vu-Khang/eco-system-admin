@@ -14,6 +14,11 @@ export type UserItem = {
   status: string;
   mustChangePassword: boolean;
   createdAt: string;
+  referrer?: {
+    referrerId: number;
+    fullName: string;
+    phoneNumber: string;
+  } | null;
 };
 
 export type UserDetailResponse = UserItem & {

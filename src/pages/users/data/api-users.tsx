@@ -23,6 +23,8 @@ export type UserListRow = {
   status: string;
   mustChangePassword: boolean;
   createdAt: string;
+  referrerName: string;
+  referrerPhone: string;
 };
 
 const roleLabelMap: Record<string, string> = {
@@ -75,6 +77,8 @@ export function mapUserItemToRow(item: UserItem): UserListRow {
     status: toText(item.status),
     mustChangePassword: Boolean(item.mustChangePassword),
     createdAt: formatDateTime(toText(item.createdAt)),
+    referrerName: item.referrer?.fullName || "",
+    referrerPhone: item.referrer?.phoneNumber || "",
   };
 }
 
@@ -132,6 +136,8 @@ export const userColumns: Column<UserListRow>[] = [
   { key: "province", label: "Tỉnh/TP" },
   { key: "commune", label: "Xã/Phường" },
   { key: "birthYear", label: "Năm sinh" },
+  { key: "referrerName", label: "Người giới thiệu" },
+  { key: "referrerPhone", label: "Số điện thoại người giới thiệu" },
   {
     key: "roleCodes",
     label: "Vai trò",
