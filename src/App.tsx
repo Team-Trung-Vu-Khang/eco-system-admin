@@ -17,7 +17,7 @@ function App() {
 
   useEffect(() => {
     if (location === "/") {
-      setLocation("/users", { replace: true });
+      setLocation("/referrals", { replace: true });
     }
   }, [location, setLocation]);
 
@@ -36,10 +36,18 @@ function App() {
           {SHOW_UNDER_DEVELOPMENT ? <UnderDevelopmentPage /> : <UsersPage />}
         </Route>
         <Route path="/users/create">
-          {SHOW_UNDER_DEVELOPMENT ? <UnderDevelopmentPage /> : <UsersCreatePage />}
+          {SHOW_UNDER_DEVELOPMENT ? (
+            <UnderDevelopmentPage />
+          ) : (
+            <UsersCreatePage />
+          )}
         </Route>
         <Route path="/users/:id/edit">
-          {SHOW_UNDER_DEVELOPMENT ? <UnderDevelopmentPage /> : <UsersEditPage />}
+          {SHOW_UNDER_DEVELOPMENT ? (
+            <UnderDevelopmentPage />
+          ) : (
+            <UsersEditPage />
+          )}
         </Route>
         <Route path="/referrals/create" component={ReferralCreatePage} />
         <Route path="/referrals/:id" component={ReferralDetailPage} />
