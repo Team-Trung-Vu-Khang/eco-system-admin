@@ -1,9 +1,5 @@
 import { useMemo } from "react";
-import {
-  Badge,
-  DataTable,
-  type Column,
-} from "@Team-Trung-Vu-Khang/eco-shared-ui";
+import { DataTable, type Column } from "@Team-Trung-Vu-Khang/eco-shared-ui";
 import type { ReferredRow } from "../data/update-user-referral";
 
 type UpdateUserReferralTableProps = {
