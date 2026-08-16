@@ -178,6 +178,10 @@ export function ReferralsPage() {
     appliedUploadJobIdRef.current = null;
   };
 
+  const handleListReferred = (referredPhone: string) => {
+    setLocation(`/referrals/update-user/${referredPhone}/list-referred`);
+  };
+
   useEffect(() => {
     if (!uploadJob || uploadJob.status === "STARTED") {
       return;
@@ -204,6 +208,7 @@ export function ReferralsPage() {
         data={referrals}
         pageSize={pageSize}
         currentIndex={tableIndex}
+        onListReferred={handleListReferred}
         totalElements={referrersQuery.data?.totalElements ?? 0}
         totalPages={referrersQuery.data?.totalPages ?? 1}
         onSearch={handleSearch}

@@ -11,6 +11,8 @@ import UsersPage from "@/pages/users/UsersPage";
 import { UnderDevelopmentPage } from "@/pages/UnderDevelopmentPage";
 import "@/App.css";
 import { AdminLayout } from "@Team-Trung-Vu-Khang/eco-shared-ui";
+import { UpdateUserReferralsPage } from "./pages/referrals/UpdateUserReferralsPage";
+import { ListReferredPage } from "./pages/referrals/ListReferredPage";
 
 function App() {
   const [location, setLocation] = useLocation();
@@ -50,6 +52,14 @@ function App() {
           )}
         </Route>
         <Route path="/referrals/create" component={ReferralCreatePage} />
+        <Route
+          path="/referrals/update-user"
+          component={UpdateUserReferralsPage}
+        />
+        <Route
+          path="/referrals/update-user/:phone/list-referred"
+          component={ListReferredPage}
+        />
         <Route path="/referrals/:id" component={ReferralDetailPage} />
         <Route path="/referrals" component={ReferralsPage} />
         <Route component={NotFoundPage} />

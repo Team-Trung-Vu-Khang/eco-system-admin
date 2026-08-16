@@ -9,20 +9,33 @@ export const PATH = {
   REFERRERS: {
     LIST: "/api/admin/referrers",
     CREATE: "/api/admin/referrers",
-    UPDATE: (referrerId: number | string) => `/api/admin/referrers/${referrerId}`,
+    UPDATE: (referrerId: number | string) =>
+      `/api/admin/referrers/${referrerId}`,
     UPDATE_STATUS: (referrerId: number | string) =>
       `/api/admin/referrers/${referrerId}/status`,
     BULK_UPLOAD: "/api/admin/referrers/bulk-upload",
     BULK_UPLOAD_JOB: (jobExecutionId: number | string) =>
       `/api/admin/referrers/bulk-upload/${jobExecutionId}`,
   },
+  UPDATE_USER_REFERRAL: {
+    LIST: "/api/admin/referred",
+    CREATE: "/api/admin/referred",
+    UPDATE: (referredId: number | string) =>
+      `/api/admin/referred/${referredId}`,
+    BULK_UPLOAD: "/api/admin/referred/bulk-upload",
+    BULK_UPLOAD_JOB: (jobExecutionId: number | string) =>
+      `/api/admin/referred/bulk-upload/${jobExecutionId}`,
+  },
   USERS: {
     LIST: "/api/admin/users",
     CREATE: "/api/admin/users",
     DETAIL: (userId: number | string) => `/api/admin/users/${userId}`,
-    UPDATE_STATUS: (userId: number | string) => `/api/admin/users/${userId}/status`,
-    ASSIGN_ROLE: (userId: number | string) => `/api/admin/users/${userId}/roles`,
-    WORKSPACES: (userId: number | string) => `/api/admin/users/${userId}/workspaces`,
+    UPDATE_STATUS: (userId: number | string) =>
+      `/api/admin/users/${userId}/status`,
+    ASSIGN_ROLE: (userId: number | string) =>
+      `/api/admin/users/${userId}/roles`,
+    WORKSPACES: (userId: number | string) =>
+      `/api/admin/users/${userId}/workspaces`,
     REVOKE_ROLE: (userId: number | string, roleId: number | string) =>
       `/api/admin/users/${userId}/roles/${roleId}`,
     SET_REFERRER: (userId: number | string) =>

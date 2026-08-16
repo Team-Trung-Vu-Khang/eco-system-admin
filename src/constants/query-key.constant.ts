@@ -11,6 +11,13 @@ export const QUERY_KEY = {
     BULK_UPLOAD: ["referrers", "bulk-upload"] as const,
     BULK_UPLOAD_JOB: ["referrers", "bulk-upload-job"] as const,
   },
+  UPDATE_USER_REFERRAL: {
+    LIST: ["update-user-referral", "list"] as const,
+    CREATE: ["update-user-referral", "create"] as const,
+    UPDATE: ["update-user-referral", "update"] as const,
+    BULK_UPLOAD: ["update-user-referral", "bulk-upload"] as const,
+    BULK_UPLOAD_JOB: ["update-user-referral", "bulk-upload-job"] as const,
+  },
   USERS: {
     LIST: ["users", "list"] as const,
     DETAIL: ["users", "detail"] as const,

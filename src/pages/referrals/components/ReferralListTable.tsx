@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
   type Column,
 } from "@Team-Trung-Vu-Khang/eco-shared-ui";
-import { MoreHorizontal, PencilLine, Power } from "lucide-react";
+import { MoreHorizontal, PencilLine, Power, User } from "lucide-react";
 import type { ReferralRow } from "../data/referrals";
 
 type ReferralListTableProps = {
@@ -31,6 +31,7 @@ type ReferralListTableProps = {
   onIndexChange: (value: number) => void;
   onEdit?: (row: ReferralRow) => void;
   onToggleStatus?: (row: ReferralRow) => void;
+  onListReferred?: (referrerPhoneNumber: string) => void;
 };
 
 export function ReferralListTable({
@@ -47,6 +48,7 @@ export function ReferralListTable({
   onIndexChange,
   onEdit,
   onToggleStatus,
+  onListReferred,
 }: ReferralListTableProps) {
   const renderStatusBadge = (status: ReferralRow["status"]) => {
     const variant = status === "Hoạt động" ? "secondary" : "destructive";
@@ -82,6 +84,10 @@ export function ReferralListTable({
               <DropdownMenuItem onClick={() => onEdit?.(row)}>
                 <PencilLine className="mr-2 h-4 w-4" />
                 Chỉnh sửa
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onListReferred?.(row.phone)}>
+                <User className="mr-2 h-4 w-4" />
+                Danh sách người đã giới thiệu
               </DropdownMenuItem>
               {onToggleStatus ? (
                 <>
